@@ -1,64 +1,88 @@
-# import streamlit as st
-# import wikipedia
-# from streamlit_searchbox import st_searchbox
-import pandas as pd
-
-
 import streamlit as st
+import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
 
 
+st.set_page_config(
+    page_title="MAIN TITLE", #TODO: replace
+    page_icon="🏂",
+    layout="wide",
+    initial_sidebar_state="expanded")
+
+
 df = pd.read_csv(f'../data/players.csv')
 players = df.name.values.tolist()
 
-# def search_list(searchterm: str) -> list:
-#     return [players.index(searchterm)] if searchterm else []
+df_teams = df.groupby('team').sum()['total_points'].reset_index().sort_values('total_points', ascending=False)
 
-# # pass search function and other options as needed
-# selected_value = st_searchbox(
-#     search_list,
-#     placeholder="Search Players... ",
-#     key="my_key",
-# )
 
-# st.write(f"Selected value: {selected_value}")
+col = st.columns((5, 1.5), gap='medium')
 
-# Set up the Streamlit UI
-st.title("Team Field Positioning")
+with col[0]:
 
-col1, col2 = st.columns(2)
+    # Set up the Streamlit UI
+    st.title("Team Field Positioning")
 
-# Sidebar for player selection
-with  col2:
-    selected_player = st.sidebar.selectbox("Select a player", players)
-
-# Load the field image
-with col1:
     img = mpimg.imread("../data/field.png")  # Assume you have an image of the field in the same directory
 
-# Display the selected player and their position
-    st.write(f"Selected player: {selected_player}")
-# position = player_positions[selected_player]
-# st.write(f"Position on field: {position}")
+    # position = player_positions[selected_player]
+    # st.write(f"Position on field: {position}")
 
-# Plot the field and player
-fig, ax = plt.subplots(figsize=(3,3))
+    # Plot the field and player
+    fig, ax = plt.subplots(figsize=(3,3))
 
-# Display the field image
-ax.imshow(img)
+    # Display the field image
+    ax.imshow(img)
 
-# Plot the player's position on the field
-# ax.plot(position[1], position[0], 'ro', markersize=10)  # 'ro' for red dot
+    # Plot the player's position on the field
+    # ax.plot(position[1], position[0], 'ro', markersize=10)  # 'ro' for red dot
 
-# Add text to the position
-# ax.text(position[1] + 0.1, position[0], selected_player, color='white', fontsize=12, ha='left')
+    # Add text to the position
+    # ax.text(position[1] + 0.1, position[0], selected_player, color='white', fontsize=12, ha='left')
 
-# Hide axes for a cleaner look
-ax.set_xticks([])
-ax.set_yticks([])
+    # Hide axes for a cleaner look
+    ax.set_xticks([])
+    ax.set_yticks([])
 
-# Display the plot
-st.pyplot(fig)
+    # Display the plot
+    st.pyplot(fig, use_container_width=False)
+
+
+
+with col[1]:
+    # st.markdown('#### Top States')
+
+    st.dataframe(df_teams,
+                 column_order=("team", "total_points"),
+                 hide_index=True,
+                 width=None,
+                 height=500,
+                 column_config={
+                    "team": st.column_config.TextColumn(
+                        "Team",
+                    ),
+                    "total_points": st.column_config.ProgressColumn(
+                        "Total Points",
+                        format="%f",
+                        min_value=0,
+                        max_value=max(df_teams.total_points),
+                     )}
+                 )
+
+# Sidebar for player selection
+with st.sidebar.expander("Team Selection", expanded=False):
+    selected_player = st.sidebar.selectbox("Select a player", players)
+
+st.write(f"Selected player: {selected_player}")
+
+with st.sidebar.expander("Team Performance", expanded=True):
+    # TODO: replace this with actual data....
+    x = np.linspace(0, 10, 100)
+    y = np.sin(x)
+    fig, ax = plt.subplots()
+    ax.plot(x, y)
+    ax.set(xlabel='X-axis', ylabel='Y-axis', title='REPLACE')
+    st.pyplot(fig)
 
