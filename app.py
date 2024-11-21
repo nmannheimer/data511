@@ -1,5 +1,3 @@
-# Fantasy Premier League App
-
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -746,23 +744,21 @@ else:
     best_team = st.session_state.best_team
 
 # Create columns for layout
-col1, col2 = st.columns([3, 1])  # Adjusted column width ratios to give more space to the field
+ # Adjusted column width ratios to give more space to the field
 
 # Draw soccer field with Plotly in the left column
-with col1:
-    team_to_display = st.radio("Select Team to Display on Field", ['Your Team', 'Best Team'])
 
-    if team_to_display == 'Your Team':
-        team_to_show = selected_players
-    else:
-        team_to_show = best_team
+team_to_display = st.radio("Select Team to Display on Field", ['Your Team', 'Best Team'])
 
-    field_fig = draw_soccer_field(team_to_show, formation)
-    st.plotly_chart(field_fig, use_container_width=True)
+if team_to_display == 'Your Team':
+    team_to_show = selected_players
+else:
+    team_to_show = best_team
 
-with col2:
-    # You can include any additional information you'd like in this column
-    pass  # Remove or replace this line with your desired content
+field_fig = draw_soccer_field(team_to_show, formation)
+st.plotly_chart(field_fig, use_container_width=True)
+
+
 
 # Team Comparison and Details
 st.subheader("Team Comparison")
