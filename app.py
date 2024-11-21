@@ -3,7 +3,6 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 import requests
-import numpy as np
 
 # Set up Streamlit page with custom theme
 st.set_page_config(
@@ -65,7 +64,7 @@ POSITION_METRICS = {
 COMMON_METRICS = [
     'id', 'web_name', 'position', 'now_cost', 'total_points', 'minutes',
     'yellow_cards', 'red_cards', 'bonus', 'bps', 'influence', 'creativity',
-    'threat', 'selected_by_percent', 'form', 'points_per_game'
+    'threat', 'selected_by_percent', 'form', 'points_per_game', 'in_dreamteam', 'dreamteam_count'
 ]
 
 # App Title
@@ -136,7 +135,7 @@ def load_player_data_from_api():
         'assists', 'clean_sheets', 'goals_conceded', 'yellow_cards',
         'red_cards', 'saves', 'bonus', 'bps', 'influence', 'creativity',
         'threat', 'ict_index', 'selected_by_percent', 'form', 'points_per_game',
-        'team_name', 'photo_url'
+        'team_name', 'in_dreamteam', 'dreamteam_count', 'photo_url'
     ]
 
     # Ensure all selected columns exist in the DataFrame
@@ -220,17 +219,41 @@ def select_players_for_position(position, count):
 
 @st.cache_data
 def get_top_players_by_position(player_data, formation):
-    """Selects the top players by position based on total points."""
+    """
+    Selects the top players by position based on the following priority:
+    1. Players in the Dream Team (`in_dreamteam` is True).
+    2. Higher Dream Team Count (`dreamteam_count`).
+    3. Total Points (`total_points`).
+
+    Parameters:
+    - player_data (pd.DataFrame): DataFrame containing player statistics.
+    - formation (str): Selected team formation (e.g., '4-4-2').
+
+    Returns:
+    - best_team (list of dict): List of selected player dictionaries for the best team.
+    """
     position_counts = FORMATION_MAP[formation]
     best_team = []
 
     for position, count in position_counts.items():
         # Filter players by position
         position_players = player_data[player_data['position'] == position]
-        # Sort players by total points in descending order
-        top_players = position_players.sort_values(by='total_points', ascending=False)
+
+        # Ensure necessary columns exist
+        required_columns = ['in_dreamteam', 'dreamteam_count', 'total_points']
+        for col in required_columns:
+            if col not in position_players.columns:
+                position_players[col] = 0  # Assign default value if column is missing
+
+        # Sort players by 'in_dreamteam', 'dreamteam_count', then 'total_points' in descending order
+        top_players = position_players.sort_values(
+            by=['in_dreamteam', 'dreamteam_count', 'total_points'],
+            ascending=[False, False, False]
+        )
+
         # Select the top 'count' players
-        best_team.extend(top_players.head(count).to_dict('records'))
+        selected_players = top_players.head(count).to_dict('records')
+        best_team.extend(selected_players)
 
     return best_team
 
@@ -436,8 +459,7 @@ def plot_total_points_comparison(user_team, best_team):
 
 
 def display_team_table(team, team_name):
-    """Displays the team information using Plotly's go.Table."""
-    import plotly.graph_objects as go  # Import go here if not already imported
+    """Displays the team information using Plotly's go.Table with enhanced styling."""
 
     st.subheader(team_name)
     team_df = pd.DataFrame(team)
@@ -467,7 +489,9 @@ def display_team_table(team, team_name):
         'form': 'Form',
         'points_per_game': 'Points Per Game',
         'team_name': 'Team',
-        # 'photo_url': 'Photo',  # Removed as per your request
+        'in_dreamteam': 'In Dream Team',
+        'dreamteam_count': 'Dreamteam Count',
+        # 'photo_url': 'Photo',
     }
 
     for position in ['GKP', 'DEF', 'MID', 'FWD']:
@@ -502,32 +526,66 @@ def display_team_table(team, team_name):
         for col in numeric_columns:
             display_df[col] = pd.to_numeric(display_df[col], errors='coerce')
 
-        # Create the Plotly table
-        header_colors = ['#e90052'] * len(display_df.columns)
+        # Define color scales for conditional formatting
+        def get_color(val, metric):
+            """Assigns a color based on the value and metric."""
+            if metric in ['Total Points', 'Points Per Game', 'Assists', 'Goals Scored']:
+                if val >= 15:
+                    return '#d4edda'  # Light green
+                elif val >= 10:
+                    return '#fff3cd'  # Light yellow
+                else:
+                    return '#f8d7da'  # Light red
+            elif metric in ['Cost (£m)']:
+                if val <= 5:
+                    return '#d1ecf1'  # Light blue
+                elif val <= 7:
+                    return '#bee5eb'  # Medium blue
+                else:
+                    return '#abdde5'  # Darker blue
+            else:
+                return '#f9f9f9' if i % 2 == 0 else '#ffffff'  # Alternating row colors
+
+        # Apply conditional coloring to cells
         cell_colors = []
         for i in range(len(display_df)):
-            cell_colors.append(['#f9f9f9' if i % 2 == 0 else '#ffffff'] * len(display_df.columns))
+            row_colors = []
+            for col in display_df.columns:
+                if col in ['Total Points', 'Points Per Game', 'Assists', 'Goals Scored', 'Cost (£m)']:
+                    color = get_color(display_df.at[i, col], col)
+                else:
+                    color = '#f9f9f9' if i % 2 == 0 else '#ffffff'  # Alternating row colors
+                row_colors.append(color)
+            cell_colors.append(row_colors)
 
+        # Create the Plotly table with enhanced styling
         fig = go.Figure(data=[go.Table(
             header=dict(
                 values=list(display_df.columns),
-                fill_color='#e90052',
-                font=dict(color='black', size=12),
-                align='center'
+                fill_color='#343a40',  # Dark header background
+                font=dict(color='white', size=12, family='Arial'),
+                align='center',
+                height=40,
+                line=dict(color='#FFFFFF', width=2)  # White borders for headers
             ),
             cells=dict(
                 values=[display_df[col] for col in display_df.columns],
                 fill_color=cell_colors,
-                font=dict(color='black', size=10),
-                align='center'
+                font=dict(color='black', size=10, family='Arial'),
+                align='center',
+                height=30,
+                line=dict(color='#FFFFFF', width=1)  # White borders for cells
             )
         )])
 
         fig.update_layout(
-            width=800,
-            margin=dict(l=0, r=0, t=10, b=0)
+            width=1200,  # Increased width for better visibility
+            margin=dict(l=20, r=20, t=20, b=20),
+            paper_bgcolor='rgba(0,0,0,0)',  # Transparent background
+            plot_bgcolor='rgba(0,0,0,0)',  # Transparent plot area
         )
 
+        # Display the Plotly table in Streamlit
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.write("No players to display.")
@@ -535,7 +593,6 @@ def display_team_table(team, team_name):
 
 def plot_team_radar_chart(user_team, best_team):
     """Plots a radar chart comparing average metrics between two teams."""
-    import plotly.graph_objects as go
 
     # Metrics to compare
     metrics = ['Goals Scored', 'Assists', 'Clean Sheets', 'Points Per Game', 'Selected By (%)']
@@ -603,7 +660,6 @@ def plot_team_radar_chart(user_team, best_team):
 
 def plot_points_contribution_by_position(user_team, best_team):
     """Plots a bar chart comparing points contribution by position between two teams."""
-    import plotly.express as px
 
     # Function to calculate points per position
     def calculate_points_per_position(team):
@@ -653,7 +709,7 @@ def plot_points_contribution_by_position(user_team, best_team):
         xaxis_title='Position',
         yaxis_title='Total Points',
         legend_title='Team',
-        template='plotly_dark'
+        template='plotly'
     )
 
     st.plotly_chart(fig, use_container_width=True)
@@ -661,10 +717,10 @@ def plot_points_contribution_by_position(user_team, best_team):
 
 def plot_cost_vs_points(user_team, best_team):
     """Plots a scatter plot of player cost vs. total points."""
-    import plotly.express as px
 
     combined_team = user_team + best_team
     df = pd.DataFrame(combined_team)
+    #df.rename(columns={'web_name':'Name'},inplace=True)
     df['Cost (£m)'] = df['now_cost'] / 10
     df['Team'] = ['Your Team'] * len(user_team) + ['Best Team'] * len(best_team)
     df['Total Points'] = pd.to_numeric(df['total_points'], errors='coerce')
@@ -676,7 +732,8 @@ def plot_cost_vs_points(user_team, best_team):
         color='Team',
         hover_data=['web_name', 'position'],
         title='Player Cost vs. Total Points',
-        color_discrete_map={'Your Team': '#e90052', 'Best Team': '#04f5ff'}
+        color_discrete_map={'Your Team': '#e90052', 'Best Team': '#04f5ff'},
+        template='plotly_white'
     )
 
     st.plotly_chart(fig, use_container_width=True)
@@ -743,20 +800,33 @@ if st.session_state.best_team is None or formation_changed:
 else:
     best_team = st.session_state.best_team
 
-# Create columns for layout
- # Adjusted column width ratios to give more space to the field
 
-# Draw soccer field with Plotly in the left column
 
-team_to_display = st.radio("Select Team to Display on Field", ['Your Team', 'Best Team'])
+col1, col2 = st.columns([3, 1])
+with col1:
+    team_to_display = st.radio("Select Team to Display on Field", ['Your Team', 'Best Team'])
 
-if team_to_display == 'Your Team':
-    team_to_show = selected_players
-else:
-    team_to_show = best_team
+    if team_to_display == 'Your Team':
+        team_to_show = selected_players
+    else:
+        team_to_show = best_team
 
-field_fig = draw_soccer_field(team_to_show, formation)
-st.plotly_chart(field_fig, use_container_width=True)
+    field_fig = draw_soccer_field(team_to_show, formation)
+    st.plotly_chart(field_fig, use_container_width=True)
+
+with col2:
+    # Display total cost comparison
+    user_total_cost = sum(player['now_cost'] for player in selected_players)
+    best_total_cost = sum(player['now_cost'] for player in best_team)
+
+    st.write(f"**Your Team Cost:** £{user_total_cost / 10:.1f}m / £{BUDGET / 10:.1f}m")
+    st.write(f"**Best Team Cost:** £{best_total_cost / 10:.1f}m / £{BUDGET / 10:.1f}m")
+
+    if user_total_cost > BUDGET:
+        st.error("Your team's budget is exceeded!")
+
+    if best_total_cost > BUDGET:
+        st.warning("The best team exceeds the budget constraints.")
 
 
 
@@ -770,18 +840,6 @@ plot_points_contribution_by_position(selected_players, best_team)
 
 plot_cost_vs_points(selected_players, best_team)
 
-# Display total cost comparison
-user_total_cost = sum(player['now_cost'] for player in selected_players)
-best_total_cost = sum(player['now_cost'] for player in best_team)
-
-st.write(f"**Your Team Cost:** £{user_total_cost/10:.1f}m / £{BUDGET/10:.1f}m")
-st.write(f"**Best Team Cost:** £{best_total_cost/10:.1f}m / £{BUDGET/10:.1f}m")
-
-if user_total_cost > BUDGET:
-    st.error("Your team's budget is exceeded!")
-
-if best_total_cost > BUDGET:
-    st.warning("The best team exceeds the budget constraints.")
 
 # Team Details in Tabs
 st.subheader("Team Details")
