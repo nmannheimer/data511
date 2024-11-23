@@ -4,14 +4,6 @@ import plotly.graph_objects as go
 import plotly.express as px
 import requests
 
-# Set up Streamlit page with custom theme
-st.set_page_config(
-    page_title="Fantasy Premier League",
-    page_icon="⚽",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
 # Constants
 APP_TITLE = "Fantasy Premier League"
 BUDGET = 1000  # Adjusted to match FPL's £100.0m as 1000 (since costs are in tenths of millions)
@@ -748,6 +740,7 @@ if 'formation' not in st.session_state:
 
 # Sidebar - Team Selection
 st.sidebar.title("Team Selection")
+# with st.sidebar.expander("Team Selection", expanded=True):
 formation = st.sidebar.selectbox("Select Formation", list(FORMATION_MAP.keys()), index=0)
 position_counts = FORMATION_MAP[formation]
 
@@ -774,7 +767,6 @@ if formation_changed:
 # Collect players by position
 selected_players = []
 total_cost = 0
-
 for position, count in position_counts.items():
     position_players = select_players_for_position(position, count)
     position_cost = sum(int(player['now_cost']) for player in position_players)

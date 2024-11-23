@@ -10,18 +10,9 @@ from PIL import Image
 import requests
 from io import BytesIO
 
-# player information (currently globals)
-# df = pd.read_csv(f'../data/players.csv')
-
 def get_prof_pic(image_url):
-
-    print('pulling from: ', str(image_url))
-
     response = requests.get(image_url)
-
-    # Check for successful response
     if response.status_code == 200:
-        # Open the image from the response content
         image = Image.open(BytesIO(response.content))
         return image
     else:
@@ -31,7 +22,6 @@ def get_prof_pic(image_url):
 # Load and preprocess data
 # @st.cache_data
 # def load_player_data_from_api():
-# """Fetches player data from the FPL API and returns a DataFrame with selected columns."""
 try:
     response = requests.get("https://fantasy.premierleague.com/api/bootstrap-static/")
     response.raise_for_status()
@@ -101,7 +91,7 @@ df = df_merged[columns_to_use]
 
 df['full_name'] = df['first_name'] + ' ' + df['second_name']
 
-############
+############################
 
 # players = df.name.values.tolist()
 players = df.full_name.values.tolist()
@@ -167,19 +157,56 @@ class Dashboard(object):
                         )
 
 
-# if __name__ == '__main__':
 
+
+
+##############################
 dash = Dashboard()
-dash.set_columns((5,5,5))
+dash.set_columns((3,5,3))
 # dash.create_field(col_num=0)
 # dash.create_topteams(col_num=1)
 
 # timeline = st.sidebar.slider("Timeline", 0.0, 1.0, 0.5)
 
 # Sidebar for player selection
-with st.sidebar.expander("Team Selection", expanded=True):
-    selected_players = st.sidebar.multiselect("Select a player", players)
+# with st.sidebar.expander("Team Selection", expanded=True):
+    # selected_players = st.sidebar.multiselect("Select a player", players)
 
+if 'selected_player0' in st.session_state:
+    selected_player0 = st.session_state.selected_player0
+    selected_player0_idx = df.full_name.tolist().index(selected_player0)
+else:
+    selected_player0 = None
+    selected_player0_idx = 0
+
+if 'selected_player1' in st.session_state:
+    selected_player1 = st.session_state.selected_player1
+    selected_player1_idx = df.full_name.tolist().index(selected_player1)
+else:
+    selected_player1 = None
+    selected_player1_idx = 0
+
+with dash.col[0]:
+    selected_player0 = st.selectbox(
+        "Select a player 1:",
+        players,
+        index=selected_player0_idx
+    )
+
+st.session_state.selected_player0 = selected_player0
+
+with dash.col[2]:
+    selected_player1 = st.selectbox(
+        "Select a player 2:",
+        players,
+        index=selected_player1_idx
+    )
+
+st.session_state.selected_player1 = selected_player1
+selected_players = [st.session_state.selected_player0, st.session_state.selected_player1]
+
+
+############################## create demo charts
 pie_data=[]
 remaining_budget = copy(BUDGET)
 total_cost = 0
@@ -217,23 +244,21 @@ for p in selected_players:
 # with st.sidebar.expander('Current Team Selection', expanded=True):
 
 with dash.col[0]:
-    for p in selected_players[:1]:
-        st.title(p)
-        url0 = df[df.full_name==p].photo_url.values[0]
-        pic0 = get_prof_pic(url0)
-        pic0 = np.array(pic0)
-        pic0[pic0.sum(-1) == 255*3] = 0
-        st.image(pic0)
+    st.markdown(f'### {st.session_state.selected_player0}', unsafe_allow_html=True)
+    url0 = df[df.full_name==st.session_state.selected_player0].photo_url.values[0]
+    pic0 = get_prof_pic(url0)
+    pic0 = np.array(pic0)
+    pic0[pic0.sum(-1) == 255*3] = 0 #flip background color to match dark theme
+    st.image(pic0)
 
 
 with dash.col[2]:
-    for p in selected_players[1:2]:
-        st.title(p)
-        url1 = df[df.full_name==p].photo_url.values[0]
-        pic1 = get_prof_pic(url1)
-        pic1 = np.array(pic1)
-        pic1[pic1.sum(-1) == 255*3] = 0
-        st.image(pic1)
+    st.markdown(f'### {st.session_state.selected_player1}', unsafe_allow_html=True)
+    url1 = df[df.full_name==st.session_state.selected_player1].photo_url.values[0]
+    pic1 = get_prof_pic(url1)
+    pic1 = np.array(pic1)
+    pic1[pic1.sum(-1) == 255*3] = 0
+    st.image(pic1)
 
 with dash.col[1]:
     with elements("nivo_pie_chart"):
