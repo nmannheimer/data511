@@ -1,5 +1,8 @@
 import streamlit as st
 
+for k, v in st.session_state.items():
+    st.session_state[k] = v
+
 st.set_page_config(
     page_title="Fantasy Premier League",
     page_icon="⚽",
