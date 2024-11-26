@@ -10,6 +10,11 @@ from PIL import Image
 import requests
 from io import BytesIO
 
+def format_keys(metrics):
+    formatted_keys =  [' '.join(word.capitalize() for word in metric.split('_')) for metric in metrics]
+    # formatted_keys = [k.replace(' ', '\n') for k in formatted_keys]
+    return formatted_keys
+
 def get_prof_pic(image_url):
     response = requests.get(image_url)
     if response.status_code == 200:
@@ -159,40 +164,9 @@ class Dashboard(object):
                         )
 
 
-
-
-
 ##############################
 dash = Dashboard()
 dash.set_columns((3,5,3))
-# dash.create_field(col_num=0)
-# dash.create_topteams(col_num=1)
-# timeline = st.sidebar.slider("Timeline", 0.0, 1.0, 0.5)
-
-# Sidebar for player selection
-# with st.sidebar.expander("Team Selection", expanded=True):
-    # selected_players = st.sidebar.multiselect("Select a player", players)
-
-# if 'selected_player0' in st.session_state:
-# #     selected_player0 = st.session_state.selected_player0
-#     if st.session_state.selected_player0 is None:
-#         selected_player0_idx = None
-#     else:
-#         selected_player0_idx = players.index(st.session_state.selected_player0)
-# else:
-#     selected_player0_idx = None #0 #default init
-#     # selected_player0 = None #players[selected_player0_idx]
-
-# if 'selected_player1' in st.session_state:
-#     # selected_player1 = st.session_state.selected_player1
-#     # selected_player1_idx = players.index(st.session_state.selected_player1)
-#     if st.session_state.selected_player1 is None:
-#         selected_player1_idx = None
-#     else:
-#         selected_player1_idx = players.index(st.session_state.selected_player1)
-# else:
-#     selected_player1_idx = None
-    # selected_player1 = None# players[selected_player1_idx]
 
 for key, val in st.session_state.items():
     print(f'setting {key} to {val}...........')
@@ -227,16 +201,15 @@ if player0 is not None and player1 is not None:
     pie_data=[]
     remaining_budget = copy(BUDGET)
     total_cost = 0
-    metrics = ['now_cost', 'total_points','goals_conceded','creativity','selected_by_percent']
+    metrics = ['now_cost', 'total_points','goals_conceded','creativity','form']
 
+    metrics_formatted = format_keys(metrics)
 
-    # if 'radar_data' in st.session_state:
-
-    radar_data = [{"metric": metrics[0]},
-                {"metric": metrics[1]},
-                {"metric": metrics[2]},
-                {"metric": metrics[3]},
-                {"metric": metrics[4]}
+    radar_data = [{"metric": metrics_formatted[0]},
+                    {"metric": metrics_formatted[1]},
+                    {"metric": metrics_formatted[2]},
+                    {"metric": metrics_formatted[3]},
+                    {"metric": metrics_formatted[4]}
                 ]
     keys_ = [m['metric'] for m in radar_data]
     for p in selected_players:
@@ -244,15 +217,11 @@ if player0 is not None and player1 is not None:
         cost_perc = 100. * (current_cost.iloc[0] / BUDGET)
         pie_data.append({"id": p, "label": p, "value": f'{cost_perc:0.2f}'})
 
-        # player_name = df[df.full_name==p]['full_name'].iloc[0]
         radar_data[0][p] = float(df[df.full_name==p][metrics[0]].iloc[0]) if df[df.full_name==p][metrics[0]].iloc[0] != '' else 0
         radar_data[2][p] = float(df[df.full_name==p][metrics[1]].iloc[0]) if df[df.full_name==p][metrics[1]].iloc[0] != '' else 0
         radar_data[1][p] = float(df[df.full_name==p][metrics[2]].iloc[0]) if df[df.full_name==p][metrics[2]].iloc[0] != '' else 0
         radar_data[3][p] = float(df[df.full_name==p][metrics[3]].iloc[0]) if df[df.full_name==p][metrics[3]].iloc[0] != '' else 0
         radar_data[4][p] = float(df[df.full_name==p][metrics[4]].iloc[0]) if df[df.full_name==p][metrics[4]].iloc[0] != '' else 0
-
-
-    print(radar_data)
 
     # st.write(f"Selected player: {selected_players}")
     # with st.sidebar.expander("Team Performance", expanded=True):
@@ -264,8 +233,6 @@ if player0 is not None and player1 is not None:
     #     ax.set(xlabel='X-axis', ylabel='Y-axis', title='REPLACE')
     #     st.pyplot(fig)
 
-    # with st.sidebar.expander('Current Team Selection', expanded=True):
-
     with dash.col[0]:
         # st.markdown(f'#### {st.session_state.selected_player0}', unsafe_allow_html=True)
         # url0 = df[df.full_name==st.session_state.selected_player0].photo_url.values[0]
@@ -276,7 +243,6 @@ if player0 is not None and player1 is not None:
         pic0[pic0.sum(-1) == 255*3] = 0 #flip background color to match dark theme
         st.image(pic0)
 
-
     with dash.col[2]:
         st.markdown(f'#### {st.session_state.selected_player1}', unsafe_allow_html=True)
         url1 = df[df.full_name==st.session_state.selected_player1].photo_url.values[0]
@@ -284,13 +250,6 @@ if player0 is not None and player1 is not None:
         pic1 = np.array(pic1)
         pic1[pic1.sum(-1) == 255*3] = 0
         st.image(pic1)
-
-# else:
-#     pie_data = None
-#     radar_data = None
-#     selected_players=[]
-
-
 
     with dash.col[1]:
         with elements("nivo_pie_chart"):
@@ -322,7 +281,7 @@ if player0 is not None and player1 is not None:
                     keys=selected_players,
                     indexBy="metric",
                     valueFormat=">-.2f",
-                    margin={ "top": 70, "right": 80, "bottom": 40, "left": 80 },
+                    margin={ "top": 70, "right": 100, "bottom": 40, "left": 100 },
                     # borderColor={ "from": "color" },
                     gridLabelOffset=36,
                     dotSize=10,
@@ -334,8 +293,8 @@ if player0 is not None and player1 is not None:
                             "anchor": "top-left",
                             "direction": "column",
                             "translateX": -50,
-                            "translateY": -40,
-                            "itemWidth": 80,
+                            "translateY": -70,
+                            "itemWidth": 100,
                             "itemHeight": 20,
                             # "itemTextColor": "#ffffff",
                             "symbolSize": 12,
@@ -351,13 +310,12 @@ if player0 is not None and player1 is not None:
                         }
                     ],
                     theme={
-                        # "background": "#FFFFFF",
                         "textColor": "#ffffff",
                         "tooltip": {
-                            # "container": {
-                                # "background": "#FFFFFF",
-                                # "color": "#ffffff",
-                            # }
+                            "container": {
+                                "background": "#FFFFFF",
+                                "color": "#000000",
+                            }
                         }
                     }
                 )
