@@ -334,4 +334,137 @@ def plot_cost_breakdown_by_position(user_team, best_team):
     # Display the pie charts
     st.plotly_chart(fig, use_container_width=True)
 
+def total_points_vs_cost_yearly(df: pd.DataFrame, min_minutes:int = 500):
+    """Plots a scatter plot of total points vs cost of the player. Only valid for players played over a certain amount of minutes."""
+    
+    filtered_df = df[df["minutes"] > min_minutes]
+    filtered_df["now_cost_m"] = df["now_cost"]/10
+    fig = px.scatter(
+    filtered_df,
+    x='now_cost_m',
+    y='total_points',
+    hover_name ='web_name',  # Add player names as hover text
+    title=f'Player Points vs. Cost in Fantasy Premier League (Total Minutes > {min_minutes})',
+    labels={
+        'now_cost_m': 'Cost (in £ millions)',
+        'total_points': 'Total Points Scored'
+    },
+    template='plotly_white',  # Use a clean aesthetic theme
+    height=600,
+    width=900
+)
+    fig.update_traces(marker=dict(size=8, color='blue', opacity=0.7),
+                textposition='top center',
+                hovertemplate='<b>%{hovertext}</b><br>Cost: £%{x:.1f}M<br>Points: %{y}')
 
+    fig.update_layout(
+        font=dict(size=12),
+        title_font=dict(size=16),
+        xaxis=dict(tickformat='.1f'),
+        yaxis=dict(gridcolor='lightgrey'),
+        showlegend=False
+    )
+    st.plotly_chart(fig, use_container_width=True)
+    
+def plot_gw_performance_by_player(player_name: str, df: pd.DataFrame):
+    """Plot the performance of a player every gameweek."""
+    
+    player_df = df[df["name"] == 'Mohamed Salah'] 
+    fig = px.line(
+        data_frame = player_df,
+        x = 'GW',
+        y = 'total_points',
+        title = f"⚽ {player_name}'s Points Over Each Gameweek 🏟️",
+        labels = {'GW' : 'Gameweeks', 'total_points': 'Points Earned'},
+        hover_data = {'goals_scored': True, 'assists': True, 'minutes' : True, 'opponent_name' : True},
+        markers = True
+    )
+
+    fig.update_traces(
+        line = dict(color = 'white', width = 3, dash = 'solid'),
+        marker = dict(size = 10, color = 'yellow', symbol = 'circle'),
+        hovertemplate = (
+            '<b>Gameweek %{x}</b><br>'
+            'Points: %{y}<br>'
+            'Goals ⚽: %{customdata[0]}<br>'
+            'Assists 🅰️: %{customdata[1]}<br>'
+            'Minutes Played ⏱️: %{customdata[2]}<br>'
+            'Opponent Team: %{customdata[3]}'
+        ),
+        customdata = player_df[['goals_scored', 'assists', 'minutes', 'opponent_name']]
+    )
+
+    fig.update_layout(
+        plot_bgcolor = 'green',
+        paper_bgcolor = 'black',
+        font = dict(color = 'white', size = 14),
+        title_font=dict(size=20, color='yellow', family='Arial Black'),
+        xaxis=dict(
+            gridcolor='white',
+            linecolor='white',
+            tickfont=dict(color='white'),
+        ),
+        yaxis=dict(
+            gridcolor='white',
+            linecolor='white',
+            tickfont=dict(color='white'),
+            rangemode='tozero',
+        ),
+        height = 500,
+        width = 1000
+    )
+    fig.show()
+
+
+def plot_transfers_in_out_by_player(player_name: str, df: pd.DataFrame):
+    """Plots the transfers in vs transfers out of a player every gameweek."""
+
+    player_df = df[df["name"] == player_name]
+    fig = go.Figure()
+
+    # Add Transfers In line
+    fig.add_trace(
+        go.Scatter(
+            x=player_df['GW'],
+            y=player_df['transfers_in'],
+            mode='lines+markers',
+            name='Transfers In',
+            line=dict(color='green', width=3),
+            marker=dict(size=8)
+        )
+    )
+
+    # Add Transfers Out line
+    fig.add_trace(
+        go.Scatter(
+            x=player_df['GW'],
+            y=player_df['transfers_out'],
+            mode='lines+markers',
+            name='Transfers Out',
+            line=dict(color='red', width=3),
+            marker=dict(size=8)
+        )
+    )
+
+    # Update layout
+    fig.update_layout(
+        title=f"Transfers In and Out Per Gameweek: {player_name}",
+        xaxis=dict(title='Gameweek', tickmode='linear', gridcolor='gray'),
+        yaxis=dict(title='Transfers', gridcolor='gray'),
+        height=600,
+        width=900,
+        plot_bgcolor='black',  # Football-themed black background
+        paper_bgcolor='black',
+        font=dict(color='white'),
+        title_font=dict(size=20, color='white', family='Arial'),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="center",
+            x=0.5
+        )
+    )
+
+    # Show the chart
+    fig.show()
