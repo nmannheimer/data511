@@ -10,6 +10,10 @@ from PIL import Image
 import requests
 from io import BytesIO
 
+from sklearn.preprocessing import StandardScaler
+from scipy.spatial.distance import cdist
+import umap
+
 def format_keys(metrics):
     formatted_keys =  [' '.join(word.capitalize() for word in metric.split('_')) for metric in metrics]
     # formatted_keys = [k.replace(' ', '\n') for k in formatted_keys]
@@ -96,6 +100,48 @@ def load_player_data_from_api():
 
     df.loc[:, 'full_name'] = df['first_name'] + ' ' + df['second_name']
     return df
+
+
+def get_similar_players(df_new: pd.DataFrame, player_name:str, target_position=None, top_n: int = 5):
+    
+    """Returns top_n similar players based on the player input. Uses UMAP for dimensional reduction and euclidean distance to find similarities
+       Requires sklearn, scipy and umap modules.   
+    """
+    df = df_new.copy()
+
+    df["now_cost_m"] = df["now_cost"]/10
+    
+    # target_position = df[df.web_name == player_name].position.values[0]
+    # df[df.web_name == 'Havertz'].position.values[0]
+
+    if target_position == 'GKP':
+        numeric_features = ["now_cost_m", "total_points", "minutes", "goals_conceded", "clean_sheets", "ict_index"]
+    elif target_position == 'DEF':
+        numeric_features = ["now_cost_m", "total_points", "minutes", "goals_conceded", "clean_sheets", "assists", "creativity", "goals_scored", "ict_index"]
+    elif target_position == "MID":
+        numeric_features = ["now_cost_m", "total_points", "minutes", "goals_scored", "assists", "creativity", "influence", "threat", "goals_conceded", "clean_sheets", "ict_index"]
+    else:
+        numeric_features = ["now_cost_m", "total_points", "minutes", "goals_scored", "assists", "creativity", "influence", "threat", "ict_index"]
+    metadata = ['full_name', 'position']
+    filtered_data = df[metadata + numeric_features].dropna()
+    
+    scaler = StandardScaler()
+    normalized_features = scaler.fit_transform(filtered_data[numeric_features])
+
+    umap_reducer = umap.UMAP(n_neighbors=5, min_dist=0.1, n_components=2)
+    umap_features = umap_reducer.fit_transform(normalized_features)
+
+    distance_matrix_umap = cdist(umap_features, umap_features, metric='euclidean')
+
+    distance_df_umap = pd.DataFrame(distance_matrix_umap, index=filtered_data['full_name'], columns=filtered_data['full_name'])
+
+    if player_name not in distance_df_umap.index:
+        return f"Player '{player_name}' not found in the dataset."
+
+    same_position_players = df[df['position'] == target_position]['full_name']
+    distances = distance_df_umap.loc[player_name, same_position_players]
+    similar_players = distances.sort_values()[1:top_n+1]  # Exclude self (distance = 0)
+    return similar_players
 
 ############################
 df = load_player_data_from_api()
@@ -188,14 +234,24 @@ with dash.col[2]:
         key='p1'
     )
 
+if player0 is not None:
+
+    player_position = str(df[df.full_name==player0].position.values[0])
+    sim_players = get_similar_players(df, player0, target_position=player_position ,top_n=5)
+    with dash.col[1]:
+        sim_players_df = pd.DataFrame(sim_players)
+        sim_players_df = sim_players_df.reset_index()
+        sim_players_df.rename(columns={"full_name": "Similar Players", player0: 'Similarity Score'}, inplace=True)
+        sim_players_df.set_index('Similar Players', inplace=True)
+        st.write(sim_players_df)
+
+
 if player0 is not None and player1 is not None:
 
     #update states
     st.session_state.selected_player0 = player0
     st.session_state.selected_player1 = player1
     selected_players = [st.session_state.selected_player0, st.session_state.selected_player1]
-
-    print("selected_players: ", selected_players)
 
     ############################## create demo charts
     pie_data=[]
@@ -206,10 +262,10 @@ if player0 is not None and player1 is not None:
     metrics_formatted = format_keys(metrics)
 
     radar_data = [{"metric": metrics_formatted[0]},
-                    {"metric": metrics_formatted[1]},
-                    {"metric": metrics_formatted[2]},
-                    {"metric": metrics_formatted[3]},
-                    {"metric": metrics_formatted[4]}
+                  {"metric": metrics_formatted[1]},
+                  {"metric": metrics_formatted[2]},
+                  {"metric": metrics_formatted[3]},
+                  {"metric": metrics_formatted[4]}
                 ]
     keys_ = [m['metric'] for m in radar_data]
     for p in selected_players:
