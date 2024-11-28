@@ -334,36 +334,109 @@ def plot_cost_breakdown_by_position(user_team, best_team):
     # Display the pie charts
     st.plotly_chart(fig, use_container_width=True)
 
-def total_points_vs_cost_yearly(df: pd.DataFrame, min_minutes:int = 500):
-    """Plots a scatter plot of total points vs cost of the player. Only valid for players played over a certain amount of minutes."""
+def total_points_vs_cost_yearly(df: pd.DataFrame, min_minutes: int = 500):
+    """Plots a scatter plot of Points Scored vs Cost that can dynamically be adjusted based on position and cost."""
     
+    # Step 1: Filter DataFrame by minimum minutes played
     filtered_df = df[df["minutes"] > min_minutes]
-    filtered_df["now_cost_m"] = df["now_cost"]/10
-    fig = px.scatter(
-    filtered_df,
-    x='now_cost_m',
-    y='total_points',
-    hover_name ='web_name',  # Add player names as hover text
-    title=f'Player Points vs. Cost in Fantasy Premier League (Total Minutes > {min_minutes})',
-    labels={
-        'now_cost_m': 'Cost (in £ millions)',
-        'total_points': 'Total Points Scored'
-    },
-    template='plotly_white',  # Use a clean aesthetic theme
-    height=600,
-    width=900
-)
-    fig.update_traces(marker=dict(size=8, color='blue', opacity=0.7),
-                textposition='top center',
-                hovertemplate='<b>%{hovertext}</b><br>Cost: £%{x:.1f}M<br>Points: %{y}')
+    filtered_df["now_cost_m"] = filtered_df["now_cost"] / 10  # Convert cost to millions
 
+    # Step 2: Create scatter plot
+    positions = filtered_df['position'].unique().tolist()
+    fig = go.Figure()
+
+    # Add scatter trace for all positions
+    for pos in positions:
+        position_data = filtered_df[filtered_df['position'] == pos]
+        fig.add_trace(
+            go.Scatter(
+                x=position_data['now_cost_m'],
+                y=position_data['total_points'],
+                mode='markers',
+                name=pos,
+                marker=dict(size=8, opacity=0.7),
+                customdata=position_data[['web_name', 'position']],
+                hovertemplate=(
+                    '<b>%{customdata[0]}</b><br>'
+                    'Position: %{customdata[1]}<br>'
+                    'Cost: £%{x:.1f}M<br>'
+                    'Points: %{y}<extra></extra>'
+                )
+            )
+        )
+
+    # Step 3: Create dropdown for position filtering
+    dropdown_buttons = [
+        dict(
+            label="All Positions",
+            method="update",
+            args=[
+                {"visible": [True] * len(fig.data)},  # Show all traces
+                {"title": "Player Points vs. Cost (All Positions)"}
+            ]
+        )
+    ]
+
+    for i, pos in enumerate(positions):
+        dropdown_buttons.append(
+            dict(
+                label=pos,
+                method="update",
+                args=[
+                    {"visible": [trace.name == pos for trace in fig.data]},  # Filter traces by position
+                    {"title": f"Player Points vs. Cost ({pos})"}
+                ]
+            )
+        )
+
+    # Step 4: Add slider for max cost filtering
+    max_cost = int(filtered_df['now_cost_m'].max())
+    min_cost = int(filtered_df['now_cost_m'].min())
+
+    steps = []
+    for cost in range(min_cost, max_cost + 1):
+        step = dict(
+            method="restyle",  # Use restyle for performance
+            args=[
+                {
+                    "x": [trace.x[trace.x <= cost] if trace.x is not None else [] for trace in fig.data],
+                    "y": [trace.y[trace.x <= cost] if trace.y is not None else [] for trace in fig.data]
+                }
+            ],
+            label=f"£{cost}M"
+        )
+        steps.append(step)
+
+    sliders = [dict(
+        active=0,
+        currentvalue={"prefix": "Max Cost: £"},
+        pad={"t": 50},
+        steps=steps,
+        transition={"duration": 0},  # Disable hover updates
+        lenmode="fraction",
+        len=1.0
+    )]
+
+    # Step 5: Update layout with dropdown and sliders
     fig.update_layout(
-        font=dict(size=12),
-        title_font=dict(size=16),
-        xaxis=dict(tickformat='.1f'),
-        yaxis=dict(gridcolor='lightgrey'),
-        showlegend=False
+        sliders=sliders,
+        updatemenus=[
+            dict(
+                buttons=dropdown_buttons,
+                direction="down",
+                showactive=True,
+                x=0.8,  # Shift the dropdown horizontally to the right
+                y=1   # Position the dropdown slightly below the title
+            )
+        ],
+        title="Player Points vs. Cost in Fantasy Premier League",
+        xaxis=dict(title="Cost (in £ millions)", tickformat='.1f'),
+        yaxis=dict(title="Total Points Scored", gridcolor='lightgrey'),
+        height=700,
+        width=1000,
+        template='plotly_white'
     )
+
     st.plotly_chart(fig, use_container_width=True)
     
 def plot_gw_performance_by_player(player_name: str, df: pd.DataFrame):
@@ -413,7 +486,7 @@ def plot_gw_performance_by_player(player_name: str, df: pd.DataFrame):
         height = 500,
         width = 1000
     )
-    fig.show()
+    st.plotly_chart(fig, use_container_width=True)
 
 
 def plot_transfers_in_out_by_player(player_name: str, df: pd.DataFrame):
@@ -467,4 +540,87 @@ def plot_transfers_in_out_by_player(player_name: str, df: pd.DataFrame):
     )
 
     # Show the chart
-    fig.show()
+    st.plotly_chart(fig, use_container_width=True)
+    
+def radar_chart_player_comparison(df: pd.DataFrame, player1: str, player2: str, metrics: list):
+    """
+    Create a radar chart to compare two players across selected metrics.
+    
+    Parameters:
+        df (pd.DataFrame): The dataset containing player stats.
+        player1 (str): The name of the first player.
+        player2 (str): The name of the second player.
+        metrics (list): List of metric columns to compare. This should ideally vary between different positions.
+    """
+     # Step 1: Ensure numeric columns for the metrics
+    for metric in metrics:
+        df[metric] = pd.to_numeric(df[metric], errors='coerce')
+
+    # Step 2: Normalize the metrics between 0 and 1
+    normalized_df = df.copy()
+    for metric in metrics:
+        min_val = normalized_df[metric].min()
+        max_val = normalized_df[metric].max()
+        normalized_df[metric] = (normalized_df[metric] - min_val) / (max_val - min_val)
+
+    # Step 3: Filter data for the two players
+    players_df = normalized_df[normalized_df['full_name'].isin([player1, player2])]
+
+    # Step 4: Filter only the relevant metrics and player name
+    players_df = players_df[['full_name'] + metrics]
+
+    # Step 5: Reshape the data for radar plotting
+    melted_df = players_df.melt(id_vars='full_name', var_name='metric', value_name='value')
+    # Step 6: Create radar chart
+    fig = px.line_polar(
+        melted_df,
+        r='value',
+        theta='metric',
+        color='full_name',
+        line_close=True,
+        title=f"Player Comparison: {player1} vs {player2}",
+        template="plotly_dark"
+    )
+
+    # Customize layout
+    fig.update_traces(fill='toself')
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(visible=True, range=[0, 1]),  # Normalized range
+            angularaxis=dict(showline=True, tickfont=dict(size=12))
+        ),
+        title_font=dict(size=20, family='Arial'),
+        legend=dict(title="Players", orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5)
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+    
+def top_n_roi_by_position(df: pd.DataFrame, pos:str, top_n:int = 5):
+    """
+    Calculates the ROI of a player per 90 minutes, filtered for minutes played greater than 400 mins. 
+    Returns a bar chart of top_n players per position.
+    """
+    
+    df["points/90"] = round((df["total_points"]/df["minutes"])*90, 3).fillna(0)
+    df["ROI"] = round(df["points/90"]/df["now_cost_m"],3).fillna(0)
+    
+    filtered_df = df[(df["minutes"] > 400) & (df["position"] == pos)].sort_values(by = ["ROI"], ascending=False)[:5]
+    
+    fig = px.bar(
+        filtered_df,
+        x = 'web_name',
+        y = 'ROI',
+        text = 'ROI',
+        title=f"Top 5 ROI Players by {pos} position",
+        labels={'ROI': 'ROI (Points per Million)', 'name': 'Player Name', 'total_points': 'Total Points'},
+        height=1000,
+        width=700
+    )
+    
+    fig.update_traces(texttemplate='%{text:.3f}', textposition='outside')
+    fig.update_layout(
+        showlegend=False,
+        uniformtext_minsize=8,
+        uniformtext_mode='hide',
+    )
+    st.plotly_chart(fig, use_container_width=True)

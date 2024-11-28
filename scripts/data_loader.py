@@ -75,7 +75,7 @@ def load_player_data_from_api():
 
     # Ensure all selected columns exist in the DataFrame
     df_final = df_merged[columns_to_use]
-    
+    df_final.loc[:, 'full_name'] = df_final['first_name'] + ' ' + df_final['second_name']
     # Remove accents from player_names
     
     # Function to remove accents
@@ -86,7 +86,7 @@ def load_player_data_from_api():
         )
 
     # Apply the function to the 'web_name' column
-    df_final['web_name_cleaned'] = df_final['web_name'].apply(remove_accents)
+    df_final['full_name_cleaned'] = df_final['full_name'].apply(remove_accents)
 
     return df_final
 
@@ -111,6 +111,6 @@ def load_gameweek_data_from_github(year: str):
         )
 
     # Apply the function to the 'web_name' column
-    df['name'] = df['name'].apply(remove_accents)
+    df['name_cleaned'] = df['name'].apply(remove_accents)
     
     return df
