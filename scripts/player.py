@@ -14,6 +14,20 @@ from sklearn.preprocessing import StandardScaler
 from scipy.spatial.distance import cdist
 import umap
 
+import pandas as pd
+import numpy as np
+import scipy.stats as stats
+import matplotlib.pyplot as plt
+import seaborn as sns
+import plotly.graph_objects as go
+from bokeh.plotting import figure, show, output_file
+from bokeh.models import ColumnDataSource, HoverTool
+import plotly.io as pio
+import matplotlib.lines as mlines
+
+from data_loader import load_player_data_from_api, load_gameweek_data_from_github
+
+
 def format_keys(metrics):
     formatted_keys =  [' '.join(word.capitalize() for word in metric.split('_')) for metric in metrics]
     # formatted_keys = [k.replace(' ', '\n') for k in formatted_keys]
@@ -27,80 +41,6 @@ def get_prof_pic(image_url):
     else:
         print(f"Failed to fetch image. HTTP Status Code: {response.status_code}")
         return Image.fromarray(np.zeros((110,140,3), dtype=np.uint8))
-
-# Load and preprocess data
-@st.cache_data
-def load_player_data_from_api():
-    try:
-        response = requests.get("https://fantasy.premierleague.com/api/bootstrap-static/")
-        response.raise_for_status()
-        data = response.json()
-    except requests.exceptions.RequestException as e:
-        st.error(f"There was an error: {e} while retrieving data")
-        # return pd.DataFrame()  # Return empty DataFrame on error
-
-    # Load data into DataFrames
-    df_elements = pd.DataFrame(data["elements"])
-    df_element_types = pd.DataFrame(data["element_types"])
-    df_teams = pd.DataFrame(data["teams"])
-
-    # Merge df_elements and df_element_types on 'element_type' and 'id'
-    df_merged = df_elements.merge(
-        df_element_types[['id', 'plural_name_short', 'plural_name']],
-        left_on='element_type',
-        right_on='id',
-        how='left'
-    )
-
-    # Merge with teams to get team names
-    df_merged = df_merged.merge(
-        df_teams[['id', 'name']],
-        left_on='team',
-        right_on='id',
-        how='left',
-        suffixes=('', '_team')
-    )
-
-    # Rename columns
-    df_merged.rename(columns={
-        'plural_name_short': 'position',
-        'name': 'team_name',
-        'photo': 'photo',
-        'code': 'code'
-    }, inplace=True)
-
-    # Drop redundant columns
-    df_merged.drop(columns=['id_y', 'id'], inplace=True)
-    df_merged.rename(columns={'id_x': 'id'}, inplace=True)
-
-    # Standardize 'position' to upper case
-    df_merged['position'] = df_merged['position'].str.upper()
-
-    # Add 'player_value_score' (custom metric, here set equal to 'total_points')
-    df_merged['player_value_score'] = df_merged['total_points']
-
-    # Construct player photo URLs
-    df_merged['photo_url'] = df_merged.apply(
-        lambda row: f"https://resources.premierleague.com/premierleague/photos/players/110x140/p{row['code']}.png",
-        axis=1
-    )
-
-    # Select the desired columns
-    columns_to_use = [
-        'id', 'web_name', 'first_name', 'second_name', 'position', 'plural_name', 'now_cost',
-        'total_points', 'player_value_score', 'minutes', 'goals_scored',
-        'assists', 'clean_sheets', 'goals_conceded', 'yellow_cards',
-        'red_cards', 'saves', 'bonus', 'bps', 'influence', 'creativity',
-        'threat', 'ict_index', 'selected_by_percent', 'form', 'points_per_game',
-        'team_name', 'in_dreamteam', 'dreamteam_count', 'photo_url'
-    ]
-
-    # Ensure all selected columns exist in the DataFrame
-    df = df_merged[columns_to_use]
-
-    df.loc[:, 'full_name'] = df['first_name'] + ' ' + df['second_name']
-    return df
-
 
 def get_similar_players(df_new: pd.DataFrame, player_name:str, target_position=None, top_n: int = 5):
     
@@ -145,22 +85,14 @@ def get_similar_players(df_new: pd.DataFrame, player_name:str, target_position=N
 
 ############################
 df = load_player_data_from_api()
+year = '2024-25'
+df_gh = load_gameweek_data_from_github(year)
 
-# players = df.name.values.tolist()
+
 players = df.full_name.values.tolist()
-
-# df_teams = df.groupby('team').sum()['total_points'].reset_index().sort_values('total_points', ascending=False)
-# pie_data=[]
-# for i in range(12):
-    # pie_data.append({"id": df.iloc[i]['name'], "label": df.iloc[i]['name'], "value": df.iloc[i]['now_cost']/10.})
-
 BUDGET = 100
-############################################
 
-# st.set_page_config(
-#     page_title="Fantasy Premier League",
-#     layout="wide",
-#     initial_sidebar_state="expanded")
+############################################
 
 class Dashboard(object):
 
@@ -210,17 +142,84 @@ class Dashboard(object):
                         )
 
 
+def plot_fpl_performance_funnel(df, players, player='full_name', total_points_column='total_points', xp_column='xP'):
+    # Set the background to black
+    plt.style.use('dark_background')
+
+    # Filter the dataframe for the players in the list
+    df_filtered = df[df[player].isin(players)]
+
+    # If the filtered dataframe is empty, inform the user
+    if df_filtered.empty:
+        print(f"Error: No players found matching the names in the list {players}")
+        return
+
+    # Calculate the residuals (actual points - expected points)
+    df_filtered['Residual'] = df_filtered[total_points_column] - df_filtered[xp_column]
+
+    # Calculate mean and standard deviation of the residuals for each player
+    residual_stats = df_filtered.groupby(player)['Residual'].agg(['mean', 'std']).reset_index()
+
+    # Rename columns to match the original dataframe's player column name
+    residual_stats.rename(columns={'mean': 'mean_residual', 
+                                   'std': 'std_residual'}, inplace=True)
+
+    # Merge the residual statistics back with the original filtered dataframe
+    df_filtered = pd.merge(df_filtered, residual_stats[[player, 'mean_residual', 'std_residual']], 
+                           on=player, how='left')
+
+    # Define custom colors for the first two players (green, red) and others (random colors)
+    colors = ['green', 'red']
+    
+    # plt.figure(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(3,3), frameon=False)
+
+    custom_palette = sns.color_palette(["red", "green"])
+
+    # Scatter plot of actual points (total_points) vs expected points (xP)
+    sns.scatterplot(data=df_filtered, 
+                    x=xp_column, 
+                    y=total_points_column, 
+                    hue=player,      # Color by player name
+                    style=player,    # Different marker for each player
+                    palette=custom_palette,   # Choose a palette for colors
+                    markers='o',      # Use circle markers (default)
+                    size='Residual',  # Size by residual
+                    sizes=(20, 200),  # Adjust size range
+                    alpha=0.8, 
+                    ax=ax)        # Set transparency for better visibility
+
+    # Set distinct colors for players, with the first two being green and red
+    color_map = sns.color_palette("Set2", len(players))  # Generate a color palette for the players
+    player_colors = {players[i]: colors[i] for i in range(len(players))}  # Assign colors
+
+    # Plot the funnel plot bounds for each player with different colors
+    for player_name, group in df_filtered.groupby(player):
+        player_mean = group['mean_residual'].iloc[0]
+        
+        # Get the player's color from the color_map
+        player_color = player_colors.get(player_name, 'gray')
+
+        # Plot bounds for each player with their specific color
+        ax.axhline(player_mean, color=player_color, linestyle='--', label=f'{player_name} Mean Residual')
+
+    # Labels and title
+    ax.set_title("FPL Performance Funnel Plot:\nActual vs Expected Points", fontsize=12, color='white')
+    ax.set_xlabel(f"Expected Points ({xp_column})", fontsize=10, color='white')
+    ax.set_ylabel(f"Total Points ({total_points_column})", fontsize=10, color='white')
+    ax.legend(title="Player Performance", loc="upper left", bbox_to_anchor=(1.05, 1), frameon=False)
+    st.pyplot(fig, use_container_width=False)
+
 ##############################
 dash = Dashboard()
-dash.set_columns((3,5,3))
+dash.set_columns((2,6,2))
 
 for key, val in st.session_state.items():
-    print(f'setting {key} to {val}...........')
     st.session_state[key] = val
 
 with dash.col[0]:
     player0 = st.selectbox(
-        "Select a player 1:",
+        "Select first player:",
         players,
         index=None,
         key='p0'
@@ -228,14 +227,13 @@ with dash.col[0]:
 
 with dash.col[2]:
     player1 = st.selectbox(
-        "Select a player 2:",
+        "Select second player:",
         players,
         index=None,
         key='p1'
     )
 
-if player0 is not None:
-
+if player0 is not None and player1 is None:
     player_position = str(df[df.full_name==player0].position.values[0])
     sim_players = get_similar_players(df, player0, target_position=player_position ,top_n=5)
     with dash.col[1]:
@@ -244,7 +242,6 @@ if player0 is not None:
         sim_players_df.rename(columns={"full_name": "Similar Players", player0: 'Similarity Score'}, inplace=True)
         sim_players_df.set_index('Similar Players', inplace=True)
         st.write(sim_players_df)
-
 
 if player0 is not None and player1 is not None:
 
@@ -308,28 +305,35 @@ if player0 is not None and player1 is not None:
         st.image(pic1)
 
     with dash.col[1]:
-        with elements("nivo_pie_chart"):
-            with mui.Box(sx={"height": 300}):
-                nivo.Pie(
-                    data=pie_data,
-                    margin={"top": 30, "right": 80, "bottom": 50, "left": 80},
-                    innerRadius=0.5,
-                    padAngle=0.7,
-                    cornerRadius=3,
-                    colors={ "scheme": "nivo" },
-                    borderWidth=1,
-                    borderColor={"from": "color", "modifiers": [["darker", 0.2]]},
-                    radialLabelsSkipAngle=10,
-                    radialLabelsTextColor="black",
-                    radialLabelsLinkColor={"from": "color"},
-                    sliceLabelsSkipAngle=10,
-                    sliceLabelsTextColor="#ffffff",
-                    arcLabelsTextColor='#ffffff',
-                    arcLinkLabelsTextColor='#ffffff',
-                    arcLinkLabelsColor='#ffffff'
-                )
+        # with elements("nivo_pie_chart"):
+        #     with mui.Box(sx={"height": 300}):
+        #         nivo.Pie(
+        #             data=pie_data,
+        #             margin={"top": 30, "right": 80, "bottom": 50, "left": 80},
+        #             innerRadius=0.5,
+        #             padAngle=0.7,
+        #             cornerRadius=3,
+        #             colors={ "scheme": "nivo" },
+        #             borderWidth=1,
+        #             borderColor={"from": "color", "modifiers": [["darker", 0.2]]},
+        #             radialLabelsSkipAngle=10,
+        #             radialLabelsTextColor="black",
+        #             radialLabelsLinkColor={"from": "color"},
+        #             sliceLabelsSkipAngle=10,
+        #             sliceLabelsTextColor="#ffffff",
+        #             arcLabelsTextColor='#ffffff',
+        #             arcLinkLabelsTextColor='#ffffff',
+        #             arcLinkLabelsColor='#ffffff'
+        #         )
 
-    with dash.col[1]:
+        plot_fpl_performance_funnel(df_gh, [player0, player1], player='name',
+                                     total_points_column='total_points', xp_column='xP')
+
+
+        st.divider()
+
+
+    # with dash.col[1]:
         with elements("nivo_charts"):
             with mui.Box(sx={"height": 400}):
                 nivo.Radar(
