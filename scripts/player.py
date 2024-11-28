@@ -233,13 +233,14 @@ with dash.col[2]:
         key='p1'
     )
 
-if player0 is not None and player1 is None:
-    player_position = str(df[df.full_name==player0].position.values[0])
-    sim_players = get_similar_players(df, player0, target_position=player_position ,top_n=5)
+if (player0 is not None and player1 is None) or (player0 is None and player1 is not None):
+    player = copy(player0 if player0 is not None else player1)
+    player_position = str(df[df.full_name==player].position.values[0])
+    sim_players = get_similar_players(df, player, target_position=player_position, top_n=5)
     with dash.col[1]:
         sim_players_df = pd.DataFrame(sim_players)
         sim_players_df = sim_players_df.reset_index()
-        sim_players_df.rename(columns={"full_name": "Similar Players", player0: 'Similarity Score'}, inplace=True)
+        sim_players_df.rename(columns={"full_name": "Similar Players", player: 'Similarity Score'}, inplace=True)
         sim_players_df.set_index('Similar Players', inplace=True)
         st.write(sim_players_df)
 
