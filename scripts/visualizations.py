@@ -4,10 +4,19 @@ import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
 from streamlit import title
-
-from constants import FIELD_COORDS_HALF, POSITION_COLORS, COMMON_METRICS, POSITION_METRICS, POSITION_FULL_NAMES
 import pandas as pd
+from constants import FIELD_COORDS_HALF, POSITION_COLORS, COMMON_METRICS, POSITION_METRICS, POSITION_FULL_NAMES
 import streamlit as st
+
+
+players_pred_df = pd.read_csv("../data/predicted_df.csv")
+def get_player_pred(name, team):
+    try:
+        name_clean = name.strip().split(".")[-1]
+        x = players_pred_df[players_pred_df.web_name.str.contains(name_clean)][players_pred_df.team == team]
+        return int(x.sort_values(['gw'], ascending = False).pred_points_rounded.iloc[0])
+    except:
+        return 0
 
 
 def draw_soccer_field(selected_team, formation):
@@ -106,7 +115,8 @@ def draw_soccer_field(selected_team, formation):
                         f"Position: {player['position']}<br>"
                         f"Team: {player['team_name']}<br>"
                         f"Cost: £{player['now_cost'] / 10:.1f}m<br>"
-                        f"Points: {player['total_points']}<extra></extra>"
+                        f"Points: {player['total_points']}<br>"
+                        f"Expected Points next GW: {get_player_pred(player['web_name'], player['team_name'])}<extra></extra>"
                     ),
                     showlegend=False
                 ))
@@ -126,6 +136,7 @@ def draw_soccer_field(selected_team, formation):
                 ))
 
     return fig
+
 
 
 def plot_total_points_comparison(user_team, best_team):
@@ -179,6 +190,7 @@ def plot_total_points_comparison(user_team, best_team):
 
     # Display the chart
     st.plotly_chart(fig, use_container_width=True)
+
 
 
 def plot_team_radar_chart(user_team, best_team):
@@ -276,7 +288,8 @@ def plot_cost_breakdown_by_position(user_team, best_team):
         all_positions = ['GKP', 'DEF', 'MID', 'FWD']
         for pos in all_positions:
             if pos not in df['position'].values:
-                df = df.append({'position': pos, 'now_cost': 0}, ignore_index=True)
+                new_row = pd.DataFrame([{'position': pos, 'now_cost': 0}])
+                df = pd.concat([df, new_row], ignore_index=True)
         return df
 
     user_cpp = ensure_all_positions(user_cpp)

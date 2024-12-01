@@ -78,6 +78,7 @@ COLOR_PALETTE = {
     'Sidebar Pick': '#4ff1fe',    # Light Blue
     'Sidebar Budget': '#ebff00',  # Bright Yellow
     'Performance Analysis': '#4eff83',  # Vibrant Green
+    'Predicted Points' : '#A020F0',
     'Gray': '#aaaaaa'             # Gray for neutral elements
 }
 
@@ -93,6 +94,7 @@ SECTION_ICONS = {
     'Metrics Radar': '📈',
     'Cost Distribution': '💸',
     'Shared Players': '🔍',
+    'Target' : '🎯',
     # Add the following keys:
     'Your Team': '👤',       # Represents the user's team
     'Best Team': '🏆'        # Represents the best possible team
