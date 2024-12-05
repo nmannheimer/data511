@@ -288,6 +288,7 @@ def plot_cost_breakdown_by_position(user_team, best_team):
         all_positions = ['GKP', 'DEF', 'MID', 'FWD']
         for pos in all_positions:
             if pos not in df['position'].values:
+
                 new_row = pd.DataFrame([{'position': pos, 'now_cost': 0}])
                 df = pd.concat([df, new_row], ignore_index=True)
         return df

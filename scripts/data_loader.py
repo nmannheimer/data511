@@ -4,7 +4,6 @@ import pandas as pd
 import requests
 import streamlit as st
 from constants import COMMON_METRICS
-import unicodedata
 
 @st.cache_data
 def load_player_data_from_api():
@@ -70,45 +69,10 @@ def load_player_data_from_api():
         'assists', 'clean_sheets', 'goals_conceded', 'yellow_cards',
         'red_cards', 'saves', 'bonus', 'bps', 'influence', 'creativity',
         'threat', 'ict_index', 'selected_by_percent', 'form', 'points_per_game',
-        'team_name', 'in_dreamteam', 'dreamteam_count', 'photo_url', 'event_points'
+        'team_name', 'in_dreamteam', 'dreamteam_count', 'photo_url'
     ]
 
     # Ensure all selected columns exist in the DataFrame
     df_final = df_merged[columns_to_use]
-    
-    # Remove accents from player_names
-    def remove_accents(input_str):
-        return ''.join(
-            char for char in unicodedata.normalize('NFD', input_str)
-            if unicodedata.category(char) != 'Mn'
-        )
 
-    # Apply the function to the 'web_name' column
-    df_final['web_name_cleaned'] = df_final['web_name'].apply(remove_accents)
-    df_final.loc[:, 'full_name'] = df_final['first_name'] + ' ' + df_final['second_name']
     return df_final
-
-@st.cache_data()
-def load_gameweek_data_from_github(year: str):
-    """Fetches gameweek by gameweek player data from the Github Dataset and returns a DataFrame with selected columns."""
-    
-    try:
-        url_gw = f"https://raw.githubusercontent.com/vaastav/Fantasy-Premier-League/master/data/{year}/gws/merged_gw.csv"
-        df = pd.read_csv(url_gw)
-    except Exception as e:
-        st.error(f"There was an error: {e} while retrieving data")
-        return pd.DataFrame()
-    
-    df["position"] = df["position"].apply(lambda x: 'GKP' if x == 'GK' else x)
-    
-    # Function to remove accents
-    def remove_accents(input_str):
-        return ''.join(
-            char for char in unicodedata.normalize('NFD', input_str)
-            if unicodedata.category(char) != 'Mn'
-        )
-
-    # Apply the function to the 'web_name' column
-    df['name'] = df['name'].apply(remove_accents)
-    # df.loc[:, 'full_name'] = df['first_name'] + ' ' + df['second_name']
-    return df
