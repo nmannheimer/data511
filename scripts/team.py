@@ -11,7 +11,16 @@ plot_team_radar_chart,
 plot_cost_breakdown_by_position
 )
 from constants import FORMATION_MAP, BUDGET, COLOR_PALETTE, SECTION_ICONS, POSITION_FULL_NAMES
+import pandas as pd
 
+players_pred_df = pd.read_csv("../data/predicted_df.csv")
+def get_player_pred(name, team):
+    try:
+        name_clean = name.strip().split(".")[-1]
+        x = players_pred_df[players_pred_df.web_name.str.contains(name_clean)][players_pred_df.team == team]
+        return int(x.sort_values(['gw'], ascending = False).pred_points_rounded.iloc[0])
+    except:
+        return 0
 
 # def main():
 # Set up Streamlit page with custom theme
@@ -120,12 +129,22 @@ with col2:
     user_total_cost = sum(player['now_cost'] for player in selected_players)
     best_total_cost = sum(player['now_cost'] for player in best_team)
 
+    user_xp_next_gw = sum(get_player_pred(player['web_name'], player['team_name']) for player in selected_players)
+    best_xp_next_gw = sum(get_player_pred(player['web_name'], player['team_name']) for player in best_team)
+
     st.markdown(
         f"<h3 style='color: {COLOR_PALETTE['Sidebar Budget']};'>{SECTION_ICONS['Budget Overview']} Budget Overview</h3>",
         unsafe_allow_html=True
     )
     st.write(f"**Your Team Cost:** £{user_total_cost / 10:.1f}m / £{BUDGET / 10:.1f}m")
     st.write(f"**Best Team Cost:** £{best_total_cost / 10:.1f}m / £{BUDGET / 10:.1f}m")
+
+    st.markdown(
+        f"<h3 style='color: {COLOR_PALETTE['Predicted Points']};'>{SECTION_ICONS['Target']} Points Prediction</h3>",
+        unsafe_allow_html=True
+    )
+    st.write(f"**Your Team Predicted Points next GW:** {user_xp_next_gw}")
+    st.write(f"**Best Team Predicted Points next GW:** {best_xp_next_gw}")
 
     if user_total_cost > BUDGET:
         st.error("Your team's budget is exceeded!")
