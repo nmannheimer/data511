@@ -1,5 +1,5 @@
 import streamlit as st
-from data_loader import load_player_data_from_api
+from data_loader import load_player_data_from_api, load_gameweek_data_from_github
 from team_selection import adjust_selected_players, select_players_for_position
 from team_computation import get_top_players_by_position, adjust_team_to_budget
 from visualizations import (
@@ -22,7 +22,7 @@ def get_player_pred(name, team):
         return 0
 
 st.markdown(
-    f"<h1 style='text-align: center; color: {COLOR_PALETTE['App Title']};'>{SECTION_ICONS['App Title']} Ultimate FPL Manager</h1>",
+    f"<h1 style='text-align: center; color: {COLOR_PALETTE['App Title']};'>{SECTION_ICONS['App Title']} Ultimate FPL Manager<br> GW {load_gameweek_data_from_github('2024-25').GW.max() + 1}</h1>",
     unsafe_allow_html=True
 )
 
