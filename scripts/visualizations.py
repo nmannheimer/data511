@@ -7,6 +7,7 @@ from streamlit import title
 import pandas as pd
 from constants import FIELD_COORDS_HALF, POSITION_COLORS, COMMON_METRICS, POSITION_METRICS, POSITION_FULL_NAMES
 import streamlit as st
+import numpy as np
 
 
 players_pred_df = pd.read_csv("../data/predicted_df.csv")
@@ -207,14 +208,32 @@ def plot_team_radar_chart(user_team, best_team):
         df = pd.DataFrame(team)
         df['Points Per Game'] = pd.to_numeric(df['points_per_game'], errors='coerce').fillna(0)
         df['Selected By (%)'] = pd.to_numeric(df['selected_by_percent'], errors='coerce').fillna(0)
+        df['threat'] = pd.to_numeric(df['threat'], errors='coerce').fillna(0)
+        df['influence'] = pd.to_numeric(df['influence'], errors='coerce').fillna(0)
+        df['creativity'] = pd.to_numeric(df['creativity'], errors='coerce').fillna(0)
+
         averages = {
             'Goals Scored': df['goals_scored'].mean(),
             'Assists': df['assists'].mean(),
             'Clean Sheets': df['clean_sheets'].mean(),
             'Points Per Game': df['Points Per Game'].mean(),
             'Selected By (%)': df['Selected By (%)'].mean(),
+            #'Threat': df['threat'].mean(),
+            #'Influence': df['influence'].mean(),
+            #'Creativity': df['creativity'].mean()
         }
-        return averages
+
+        # Extract the values and compute min and max
+        vals = np.array(list(averages.values()))
+        min_val = vals.min()
+        max_val = vals.max()
+
+        # Perform min-max normalization
+        normalized_averages = {
+            k: (v - min_val) / (max_val - min_val) for k, v in averages.items()
+        }
+
+        return normalized_averages
 
     user_averages = get_team_averages(user_team)
     best_averages = get_team_averages(best_team)
