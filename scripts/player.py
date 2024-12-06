@@ -17,6 +17,8 @@ import umap
 from data_loader import load_player_data_from_api, load_gameweek_data_from_github
 import seaborn as sns
 
+from visualizations import plot_transfers_in_out_by_player, plot_fpl_performance_funnel
+
 def format_keys(metrics):
     formatted_keys =  [' '.join(word.capitalize() for word in metric.split('_')) for metric in metrics]
     # formatted_keys = [k.replace(' ', '\n') for k in formatted_keys]
@@ -30,62 +32,6 @@ def get_prof_pic(image_url):
     else:
         print(f"Failed to fetch image. HTTP Status Code: {response.status_code}")
         return Image.fromarray(np.zeros((110,140,3), dtype=np.uint8))
-
-def plot_fpl_performance_funnel(df, players, player='full_name', total_points_column='total_points', xp_column='xP'):
-    # Set the background to black
-    plt.style.use('dark_background')
-    # Filter the dataframe for the players in the list
-    df_filtered = df[df[player].isin(players)]
-    # If the filtered dataframe is empty, inform the user
-    if df_filtered.empty:
-        print(f"Error: No players found matching the names in the list {players}")
-        return
-    # Calculate the residuals (actual points - expected points)
-    df_filtered['Residual'] = df_filtered[total_points_column] - df_filtered[xp_column]
-    # Calculate mean and standard deviation of the residuals for each player
-    residual_stats = df_filtered.groupby(player)['Residual'].agg(['mean', 'std']).reset_index()
-    # Rename columns to match the original dataframe's player column name
-    residual_stats.rename(columns={'mean': 'mean_residual', 
-                                   'std': 'std_residual'}, inplace=True)
-    # Merge the residual statistics back with the original filtered dataframe
-    df_filtered = pd.merge(df_filtered, residual_stats[[player, 'mean_residual', 'std_residual']], 
-                           on=player, how='left')
-    # Define custom colors for the first two players (green, red) and others (random colors)
-    colors = ['green', 'red']
-    
-    # plt.figure(figsize=(10, 6))
-    fig, ax = plt.subplots(figsize=(3,3), frameon=False)
-    custom_palette = sns.color_palette(["red", "green"])
-    # Scatter plot of actual points (total_points) vs expected points (xP)
-    sns.scatterplot(data=df_filtered, 
-                    x=xp_column, 
-                    y=total_points_column, 
-                    hue=player,      # Color by player name
-                    style=player,    # Different marker for each player
-                    palette=custom_palette,   # Choose a palette for colors
-                    markers='o',      # Use circle markers (default)
-                    size='Residual',  # Size by residual
-                    sizes=(20, 200),  # Adjust size range
-                    alpha=0.8, 
-                    ax=ax)        # Set transparency for better visibility
-    # Set distinct colors for players, with the first two being green and red
-    color_map = sns.color_palette("Set2", len(players))  # Generate a color palette for the players
-    player_colors = {players[i]: colors[i] for i in range(len(players))}  # Assign colors
-    # Plot the funnel plot bounds for each player with different colors
-    for player_name, group in df_filtered.groupby(player):
-        player_mean = group['mean_residual'].iloc[0]
-        
-        # Get the player's color from the color_map
-        player_color = player_colors.get(player_name, 'gray')
-        # Plot bounds for each player with their specific color
-        ax.axhline(player_mean, color=player_color, linestyle='--', label=f'{player_name} Mean Residual')
-    # Labels and title
-    ax.set_title("FPL Performance Funnel Plot:\nActual vs Expected Points", fontsize=12, color='white')
-    ax.set_xlabel(f"Expected Points ({xp_column})", fontsize=10, color='white')
-    ax.set_ylabel(f"Total Points ({total_points_column})", fontsize=10, color='white')
-    ax.legend(title="Player Performance", loc="upper left", bbox_to_anchor=(1.05, 1), frameon=False)
-    st.pyplot(fig, use_container_width=False)
-
 
 def get_similar_players(df_new: pd.DataFrame, player_name:str, target_position=None, top_n: int = 5):
     
@@ -197,13 +143,12 @@ class Dashboard(object):
                             )}
                         )
 
-
 ##############################
+
 dash = Dashboard()
-dash.set_columns((2,6,2))
+dash.set_columns((4,4,4))
 
 for key, val in st.session_state.items():
-    # print(f'setting {key} to {val}...........')
     st.session_state[key] = val
 
 with dash.col[0]:
@@ -222,17 +167,17 @@ with dash.col[2]:
         key='p1'
     )
 
-if player0 is not None and player1 is None:
-
-    player_position = str(df[df.full_name==player0].position.values[0])
-    sim_players = get_similar_players(df, player0, target_position=player_position ,top_n=5)
+if (player0 is not None and player1 is None) or (player0 is None and player1 is not None):
+    player = copy(player0 if player0 is not None else player1)
+    player_position = str(df[df.full_name==player].position.values[0])
+    sim_players = get_similar_players(df, player, target_position=player_position, top_n=5)
+    
     with dash.col[1]:
         sim_players_df = pd.DataFrame(sim_players)
         sim_players_df = sim_players_df.reset_index()
-        sim_players_df.rename(columns={"full_name": "Similar Players", player0: 'Similarity Score'}, inplace=True)
+        sim_players_df.rename(columns={"full_name": "Similar Players", player: 'Similarity Score'}, inplace=True)
         sim_players_df.set_index('Similar Players', inplace=True)
         st.write(sim_players_df)
-
 
 if player0 is not None and player1 is not None:
 
@@ -287,6 +232,9 @@ if player0 is not None and player1 is not None:
         pic0[pic0.sum(-1) == 255*3] = 0 #flip background color to match dark theme
         st.image(pic0)
 
+        # transfers plot
+        plot_transfers_in_out_by_player(player0, df_gh)
+
     with dash.col[2]:
         st.markdown(f'#### {st.session_state.selected_player1}', unsafe_allow_html=True)
         url1 = df[df.full_name==st.session_state.selected_player1].photo_url.values[0]
@@ -294,6 +242,9 @@ if player0 is not None and player1 is not None:
         pic1 = np.array(pic1)
         pic1[pic1.sum(-1) == 255*3] = 0
         st.image(pic1)
+
+        # transfers plot
+        plot_transfers_in_out_by_player(player1, df_gh)
 
     with dash.col[1]:
         # with elements("nivo_pie_chart"):
@@ -316,13 +267,6 @@ if player0 is not None and player1 is not None:
         #             arcLinkLabelsTextColor='#ffffff',
         #             arcLinkLabelsColor='#ffffff'
         #         )
-
-        plot_fpl_performance_funnel(df_gh, [player0, player1], player='name',
-                                     total_points_column='total_points', xp_column='xP')
-        st.divider()
-
-
-    with dash.col[1]:
         with elements("nivo_charts"):
             with mui.Box(sx={"height": 400}):
                 nivo.Radar(
@@ -330,7 +274,7 @@ if player0 is not None and player1 is not None:
                     keys=selected_players,
                     indexBy="metric",
                     valueFormat=">-.2f",
-                    margin={ "top": 70, "right": 100, "bottom": 40, "left": 100 },
+                    margin={ "top": 10, "right": 60, "bottom": 10, "left": 60},
                     # borderColor={ "from": "color" },
                     gridLabelOffset=36,
                     dotSize=10,
@@ -368,3 +312,12 @@ if player0 is not None and player1 is not None:
                         }
                     }
                 )
+
+        st.divider()
+
+
+    with dash.col[1]:
+        # julian's plot
+        plot_fpl_performance_funnel(df_gh, [player0, player1], player='name',
+                                total_points_column='total_points', xp_column='xP')
+        

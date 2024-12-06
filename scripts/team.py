@@ -6,7 +6,8 @@ from visualizations import (
     draw_soccer_field,
     plot_total_points_comparison,
     plot_team_radar_chart,
-    plot_cost_breakdown_by_position
+    plot_cost_breakdown_by_position,
+    total_points_vs_cost_yearly
 )
 from constants import FORMATION_MAP, BUDGET, COLOR_PALETTE, SECTION_ICONS, POSITION_FULL_NAMES
 import pandas as pd
@@ -147,10 +148,16 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+total_points_vs_cost_yearly(player_data, 500)
+
+st.divider()
+
 st.markdown(
     f"<h4 style='color: {COLOR_PALETTE['Performance Analysis']};'>{SECTION_ICONS['Performance Analysis']} Total Points Comparison</h4>",
     unsafe_allow_html=True)
 plot_total_points_comparison(selected_players, best_team)
+
+st.divider()
 
 st.markdown(
     f"<h4 style='color: {COLOR_PALETTE['Performance Analysis']};'>{SECTION_ICONS['Performance Analysis']} Average Team Performance Metrics Comparison</h4>",
