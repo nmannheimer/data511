@@ -638,3 +638,53 @@ def top_n_roi_by_position(df: pd.DataFrame, pos:str, top_n:int = 5):
         uniformtext_mode='hide',
     )
     st.plotly_chart(fig, use_container_width=True)
+    
+def ownership_vs_points_bubble_chart(df: pd.DataFrame, pos: str, min_ownership_pct:float):
+    """
+    Create a bubble chart showing ownership percentage vs points scored for players.
+    
+    Parameters:
+        df (pd.DataFrame): The dataset containing player stats.
+    """
+    # Step 1: Ensure required columns are numeric
+    df['selected_by_percent'] = pd.to_numeric(df['selected_by_percent'], errors='coerce')
+    df['total_points'] = pd.to_numeric(df['total_points'], errors='coerce')
+    
+    df = df[(df["position"] == pos) & (df["selected_by_percent"] < min_ownership_pct) & (df["selected_by_percent"] > 2)]
+    # Step 2: Create the bubble chart
+    fig = px.scatter(
+        df,
+        x='selected_by_percent',
+        y='ROI',
+        size='now_cost_m',  # Bubble size based on cost
+        color='position',
+        hover_name='full_name',
+        title=f"Ownership vs Points Bubble Chart for {pos} for Ownership less than {min_ownership_pct}%",
+        labels={
+            'selected_by_percent': 'Ownership Percentage (%)',
+            'ROI': 'ROI',
+            'now_cost_m': 'Cost (in £M)'
+        },
+        template='plotly_white',
+        height=600,
+        width=900
+    )
+
+    # Customize bubble size using sizeref and sizemin
+    fig.update_traces(
+        marker=dict(
+            sizeref=2. * df['now_cost_m'].max() / (10 ** 2),  # Adjust this to scale bubbles down
+            sizemin=5,  # Minimum bubble size
+            opacity=0.8,
+            sizemode='diameter'
+        )
+    )
+
+    fig.update_layout(
+        xaxis=dict(title="Ownership Percentage (%)"),
+        yaxis=dict(title="ROI"),
+        legend=dict(title="Position"),
+        coloraxis_colorbar=dict(title="Position")
+    )
+
+    fig.show()
