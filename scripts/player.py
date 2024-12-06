@@ -147,7 +147,7 @@ def get_similar_players(df_new: pd.DataFrame, player_name:str, target_position=N
 df = load_player_data_from_api()
 
 # players = df.name.values.tolist()
-players = df.full_name.values.tolist()
+players = sorted(df.full_name.values.tolist())
 
 # df_teams = df.groupby('team').sum()['total_points'].reset_index().sort_values('total_points', ascending=False)
 # pie_data=[]
@@ -215,7 +215,7 @@ dash = Dashboard()
 dash.set_columns((3,5,3))
 
 for key, val in st.session_state.items():
-    print(f'setting {key} to {val}...........')
+    # print(f'setting {key} to {val}...........')
     st.session_state[key] = val
 
 with dash.col[0]:
