@@ -138,8 +138,16 @@ with col2:
                 for idx, player in enumerate(pos_players):
                     with cols[idx]:
                         photo_url = player.get('photo_url', 'https://via.placeholder.com/100')
-                        st.image(photo_url, width=80)
-                        st.caption(player['web_name'])
+                        # Center-align photo and caption using HTML
+                        st.markdown(
+                            f"""
+                            <div style="text-align: center;">
+                                <img src="{photo_url}" style="width:80px; border-radius:50%;">
+                                <p style="margin-top:5px;">{player['web_name']}</p>
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
     else:
         st.write("**Please select your team or best team to view player photos.**")
 
