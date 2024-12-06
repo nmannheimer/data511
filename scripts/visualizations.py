@@ -781,8 +781,3 @@ def plot_player_vs_avg_actual_points(df, full_name):
     # Show the plot
     plt.tight_layout()
     st.pyplot(fig, use_container_width=False)
-
-
-
-
-
