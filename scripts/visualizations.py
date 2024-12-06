@@ -687,4 +687,4 @@ def ownership_vs_points_bubble_chart(df: pd.DataFrame, pos: str, min_ownership_p
         coloraxis_colorbar=dict(title="Position")
     )
 
-    fig.show()
+    st.plotly_chart(fig, use_container_width=True)
