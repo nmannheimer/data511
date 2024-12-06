@@ -7,7 +7,8 @@ from visualizations import (
     plot_total_points_comparison,
     plot_team_radar_chart,
     plot_cost_breakdown_by_position,
-    total_points_vs_cost_yearly
+    total_points_vs_cost_yearly,
+    ownership_vs_points_bubble_chart_with_dropdown
 )
 from constants import FORMATION_MAP, BUDGET, COLOR_PALETTE, SECTION_ICONS, POSITION_FULL_NAMES
 import pandas as pd
@@ -150,6 +151,9 @@ st.markdown(
 
 total_points_vs_cost_yearly(player_data, 500)
 
+st.divider()
+
+ownership_vs_points_bubble_chart_with_dropdown(player_data, min_ownership_pct=10.0)
 st.divider()
 
 st.markdown(

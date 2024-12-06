@@ -17,7 +17,7 @@ import umap
 from data_loader import load_player_data_from_api, load_gameweek_data_from_github
 import seaborn as sns
 
-from visualizations import plot_transfers_in_out_by_player, plot_fpl_performance_funnel
+from visualizations import plot_transfers_in_out_by_player, plot_fpl_performance_funnel, plot_gw_performance_by_player, radar_chart_player_comparison
 
 def format_keys(metrics):
     formatted_keys =  [' '.join(word.capitalize() for word in metric.split('_')) for metric in metrics]
@@ -33,6 +33,7 @@ def get_prof_pic(image_url):
         print(f"Failed to fetch image. HTTP Status Code: {response.status_code}")
         return Image.fromarray(np.zeros((110,140,3), dtype=np.uint8))
 
+@st.cache_data()
 def get_similar_players(df_new: pd.DataFrame, player_name:str, target_position=None, top_n: int = 5):
     
     """Returns top_n similar players based on the player input. Uses UMAP for dimensional reduction and euclidean distance to find similarities
@@ -90,11 +91,6 @@ players = sorted(df.full_name.values.tolist())
 
 BUDGET = 100
 ############################################
-
-# st.set_page_config(
-#     page_title="Fantasy Premier League",
-#     layout="wide",
-#     initial_sidebar_state="expanded")
 
 class Dashboard(object):
 
@@ -235,6 +231,8 @@ if player0 is not None and player1 is not None:
         # transfers plot
         plot_transfers_in_out_by_player(player0, df_gh)
 
+        plot_gw_performance_by_player(player0, df_gh)
+
     with dash.col[2]:
         st.markdown(f'#### {st.session_state.selected_player1}', unsafe_allow_html=True)
         url1 = df[df.full_name==st.session_state.selected_player1].photo_url.values[0]
@@ -246,7 +244,13 @@ if player0 is not None and player1 is not None:
         # transfers plot
         plot_transfers_in_out_by_player(player1, df_gh)
 
+        plot_gw_performance_by_player(player1, df_gh)
+
     with dash.col[1]:
+
+        radar_chart_player_comparison(df, player0, player1, 
+                                       metrics = ['total_points', 'minutes', 'goals_scored', 'assists', 'clean_sheets', 'goals_conceded', 'selected_by_percent'])
+        st.divider()
         # with elements("nivo_pie_chart"):
         #     with mui.Box(sx={"height": 300}):
         #         nivo.Pie(
@@ -267,53 +271,53 @@ if player0 is not None and player1 is not None:
         #             arcLinkLabelsTextColor='#ffffff',
         #             arcLinkLabelsColor='#ffffff'
         #         )
-        with elements("nivo_charts"):
-            with mui.Box(sx={"height": 400}):
-                nivo.Radar(
-                    data=radar_data,
-                    keys=selected_players,
-                    indexBy="metric",
-                    valueFormat=">-.2f",
-                    margin={ "top": 10, "right": 60, "bottom": 10, "left": 60},
-                    # borderColor={ "from": "color" },
-                    gridLabelOffset=36,
-                    dotSize=10,
-                    # dotColor={ "theme": "background" },
-                    dotBorderWidth=2,
-                    motionConfig="wobbly",
-                    legends=[
-                        {
-                            "anchor": "top-left",
-                            "direction": "column",
-                            "translateX": -50,
-                            "translateY": -70,
-                            "itemWidth": 100,
-                            "itemHeight": 20,
-                            # "itemTextColor": "#ffffff",
-                            "symbolSize": 12,
-                            "symbolShape": "circle",
-                            "effects": [
-                                {
-                                    "on": "hover",
-                                    # "style": {
-                                        # "itemTextColor": "#ffffff"
-                                    # }
-                                }
-                            ]
-                        }
-                    ],
-                    theme={
-                        "textColor": "#ffffff",
-                        "tooltip": {
-                            "container": {
-                                "background": "#FFFFFF",
-                                "color": "#000000",
-                            }
-                        }
-                    }
-                )
+        # with elements("nivo_charts"):
+            # with mui.Box(sx={"height": 400}):
+            #     nivo.Radar(
+            #         data=radar_data,
+            #         keys=selected_players,
+            #         indexBy="metric",
+            #         valueFormat=">-.2f",
+            #         margin={ "top": 10, "right": 60, "bottom": 10, "left": 60},
+            #         # borderColor={ "from": "color" },
+            #         gridLabelOffset=36,
+            #         dotSize=10,
+            #         # dotColor={ "theme": "background" },
+            #         dotBorderWidth=2,
+            #         motionConfig="wobbly",
+            #         legends=[
+            #             {
+            #                 "anchor": "top-left",
+            #                 "direction": "column",
+            #                 "translateX": -50,
+            #                 "translateY": -70,
+            #                 "itemWidth": 100,
+            #                 "itemHeight": 20,
+            #                 # "itemTextColor": "#ffffff",
+            #                 "symbolSize": 12,
+            #                 "symbolShape": "circle",
+            #                 "effects": [
+            #                     {
+            #                         "on": "hover",
+            #                         # "style": {
+            #                             # "itemTextColor": "#ffffff"
+            #                         # }
+            #                     }
+            #                 ]
+            #             }
+            #         ],
+            #         theme={
+            #             "textColor": "#ffffff",
+            #             "tooltip": {
+            #                 "container": {
+            #                     "background": "#FFFFFF",
+            #                     "color": "#000000",
+            #                 }
+            #             }
+            #         }
+            #     )
 
-        st.divider()
+        
 
 
     with dash.col[1]:

@@ -11,6 +11,8 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
+import plotly.express as px
+import pandas as pd
 
 
 players_pred_df = pd.read_csv("../data/predicted_df.csv")
@@ -478,14 +480,14 @@ def total_points_vs_cost_yearly(df: pd.DataFrame, min_minutes: int = 500):
 def plot_gw_performance_by_player(player_name: str, df: pd.DataFrame):
     """Plot the performance of a player every gameweek."""
     
-    player_df = df[df["name"] == 'Mohamed Salah'] 
+    player_df = df[df["name"] == player_name] 
     fig = px.line(
         data_frame = player_df,
         x = 'GW',
         y = 'total_points',
         title = f"⚽ {player_name}'s Points Over Each Gameweek 🏟️",
         labels = {'GW' : 'Gameweeks', 'total_points': 'Points Earned'},
-        hover_data = {'goals_scored': True, 'assists': True, 'minutes' : True, 'opponent_name' : True},
+        hover_data = {'goals_scored': True, 'assists': True, 'minutes' : True},
         markers = True
     )
 
@@ -498,16 +500,16 @@ def plot_gw_performance_by_player(player_name: str, df: pd.DataFrame):
             'Goals ⚽: %{customdata[0]}<br>'
             'Assists 🅰️: %{customdata[1]}<br>'
             'Minutes Played ⏱️: %{customdata[2]}<br>'
-            'Opponent Team: %{customdata[3]}'
         ),
-        customdata = player_df[['goals_scored', 'assists', 'minutes', 'opponent_name']]
+        customdata = player_df[['goals_scored', 'assists', 'minutes']]
     )
 
     fig.update_layout(
-        plot_bgcolor = 'green',
-        paper_bgcolor = 'black',
-        font = dict(color = 'white', size = 14),
-        title_font=dict(size=20, color='yellow', family='Arial Black'),
+        plot_bgcolor='black',  # Football-themed black background
+        paper_bgcolor='black',
+        font=dict(color='white'),
+        # font = dict(color = 'white', size = 14),
+        title_font=dict(size=14, color='yellow', family='Arial Black'),
         xaxis=dict(
             gridcolor='white',
             linecolor='white',
@@ -520,7 +522,7 @@ def plot_gw_performance_by_player(player_name: str, df: pd.DataFrame):
             rangemode='tozero',
         ),
         height = 500,
-        width = 1000
+        width = 600
     )
     st.plotly_chart(fig, use_container_width=True)
 
@@ -557,15 +559,15 @@ def plot_transfers_in_out_by_player(player_name: str, df: pd.DataFrame):
 
     # Update layout
     fig.update_layout(
-        title=f"Transfers In and Out Per Gameweek: {player_name}",
+        title=f"Transfers In and Out Per Gameweek: \n{player_name}",
         xaxis=dict(title='Gameweek', tickmode='linear', gridcolor='gray'),
         yaxis=dict(title='Transfers', gridcolor='gray'),
         height=600,
-        width=900,
+        width=600,
         plot_bgcolor='black',  # Football-themed black background
         paper_bgcolor='black',
         font=dict(color='white'),
-        title_font=dict(size=20, color='white', family='Arial'),
+        title_font=dict(size=14, color='white', family='Arial'),
         legend=dict(
             orientation="h",
             yanchor="bottom",
@@ -715,27 +717,42 @@ def plot_fpl_performance_funnel(df, players, player='full_name', total_points_co
     ax.legend(title="Player Performance", loc="upper left", bbox_to_anchor=(0.01, -0.25), frameon=False)
     st.pyplot(fig, use_container_width=False)
     
-def ownership_vs_points_bubble_chart(df: pd.DataFrame, pos: str, min_ownership_pct:float):
+
+def ownership_vs_points_bubble_chart_with_dropdown(df: pd.DataFrame, min_ownership_pct: float):
     """
-    Create a bubble chart showing ownership percentage vs points scored for players.
-    
+    Create a bubble chart with a dropdown to filter by player position.
     Parameters:
         df (pd.DataFrame): The dataset containing player stats.
+        min_ownership_pct (float): The maximum ownership percentage for filtering players.
     """
     # Step 1: Ensure required columns are numeric
+    df["now_cost_m"] = df["now_cost"]/10
+    df["points/90"] = round((df["total_points"]/df["minutes"])*90, 3).fillna(0)
+    df["ROI"] = round(df["points/90"]/df["now_cost_m"],3).fillna(0)
     df['selected_by_percent'] = pd.to_numeric(df['selected_by_percent'], errors='coerce')
     df['total_points'] = pd.to_numeric(df['total_points'], errors='coerce')
-    
-    df = df[(df["position"] == pos) & (df["selected_by_percent"] < min_ownership_pct) & (df["selected_by_percent"] > 2)]
-    # Step 2: Create the bubble chart
+    df['now_cost_m'] = pd.to_numeric(df['now_cost_m'], errors='coerce')
+    df['ROI'] = pd.to_numeric(df['ROI'], errors='coerce')
+    # Step 2: Get unique positions
+    positions = df['position'].unique()
+    # Step 3: Filter data for each position
+    filtered_data = {}
+    for pos in positions:
+        filtered_data[pos] = df[
+            (df['position'] == pos) &
+            (df['selected_by_percent'] < min_ownership_pct) &
+            (df['selected_by_percent'] > 2)
+        ]
+    # Step 4: Create the initial figure for the first position
+    initial_position = positions[0]
     fig = px.scatter(
-        df,
+        filtered_data[initial_position],
         x='selected_by_percent',
         y='ROI',
         size='now_cost_m',  # Bubble size based on cost
         color='position',
         hover_name='full_name',
-        title=f"Ownership vs Points Bubble Chart for {pos} for Ownership less than {min_ownership_pct}%",
+        title=f"Ownership vs ROI Bubble Chart for {initial_position} for Ownership less than {min_ownership_pct}%",
         labels={
             'selected_by_percent': 'Ownership Percentage (%)',
             'ROI': 'ROI',
@@ -745,8 +762,7 @@ def ownership_vs_points_bubble_chart(df: pd.DataFrame, pos: str, min_ownership_p
         height=600,
         width=900
     )
-
-    # Customize bubble size using sizeref and sizemin
+    # Customize bubble size
     fig.update_traces(
         marker=dict(
             sizeref=2. * df['now_cost_m'].max() / (10 ** 2),  # Adjust this to scale bubbles down
@@ -755,15 +771,43 @@ def ownership_vs_points_bubble_chart(df: pd.DataFrame, pos: str, min_ownership_p
             sizemode='diameter'
         )
     )
-
+    # Step 5: Add dropdown for position filtering
+    dropdown_buttons = []
+    for pos in positions:
+        dropdown_buttons.append(
+            dict(
+                label=pos,
+                method="update",
+                args=[
+                    {
+                        "x": [filtered_data[pos]['selected_by_percent']],
+                        "y": [filtered_data[pos]['ROI']],
+                        "marker.size": [filtered_data[pos]['now_cost_m']]
+                    },
+                    {"title": f"Ownership vs ROI Bubble Chart for {pos} for Ownership less than {min_ownership_pct}%"}
+                ]
+            )
+        )
+    # Step 6: Add dropdown menu to layout
     fig.update_layout(
+        updatemenus=[
+            dict(
+                buttons=dropdown_buttons,
+                direction="down",
+                showactive=True,
+                x=0.9,
+                y=1.15,
+                xanchor="left",
+                yanchor="top"
+            )
+        ],
         xaxis=dict(title="Ownership Percentage (%)"),
         yaxis=dict(title="ROI"),
         legend=dict(title="Position"),
         coloraxis_colorbar=dict(title="Position")
     )
-
-    st.pyplot(fig, use_container_width=False)
+    # Show the chart
+    st.plotly_chart(fig, use_container_width=False)
     
 def plot_player_vs_avg_actual_points(df, full_name):
     # Filter the data for the specific player
