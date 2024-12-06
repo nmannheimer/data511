@@ -9,6 +9,7 @@ from constants import FIELD_COORDS_HALF, POSITION_COLORS, COMMON_METRICS, POSITI
 import streamlit as st
 import seaborn as sns
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 
 players_pred_df = pd.read_csv("../data/predicted_df.csv")
 def get_player_pred(name, team):
@@ -742,4 +743,46 @@ def ownership_vs_points_bubble_chart(df: pd.DataFrame, pos: str, min_ownership_p
         coloraxis_colorbar=dict(title="Position")
     )
 
-    fig.show()
+    st.pyplot(fig, use_container_width=False)
+    
+def plot_player_vs_avg_actual_points(df, full_name):
+    # Filter the data for the specific player
+    player_data = df[df['name'] == full_name]
+    # Find the player's position
+    player_position = player_data['position'].iloc[0]
+    # Calculate the average actual points for the player's position
+    avg_position_data = df[df['position'] == player_position]
+    avg_actual_points = avg_position_data.groupby('GW')['total_points'].mean().reset_index()
+    # Set the dark theme for the plot
+    plt.style.use('dark_background')
+    # Create a figure to plot the bar chart and lines
+    fig, ax = plt.subplots(figsize=(12, 8))
+    # Loop through the gameweeks and conditionally color the bars based on 'was_home'
+    for i, row in player_data.iterrows():
+        bar_color = '#1E90FF' if row['was_home'] == 1 else '#FF6347'  # Blue for home, Red/Pink for away
+        ax.bar(row['GW'], row['total_points'], width=0.4, color=bar_color, label=f'{full_name} - Actual Points' if i == 0 else "")
+    # Line plot for the average actual points for the position
+    ax.plot(avg_actual_points['GW'], avg_actual_points['total_points'], label=f'Average {player_position} - Actual Points', color='#BA55D3', linestyle='--', linewidth=2)
+    # Add labels and title
+    ax.set_xlabel('Gameweek', color='white')
+    ax.set_ylabel('Actual Points', color='white')
+    ax.set_title(f'{full_name} Actual Points vs. Average {player_position} Performance Over Time', color='white')
+    # Create a custom legend for home/away
+    home_away_legend = [
+        Line2D([0], [0], marker='o', color='w', markerfacecolor='#1E90FF', markersize=10, label='Home'),
+        Line2D([0], [0], marker='o', color='w', markerfacecolor='#FF6347', markersize=10, label='Away')
+    ]
+    # Add the legend to the plot
+    ax.legend(handles=home_away_legend + ax.get_legend_handles_labels()[0])
+    # Customize ticks and grid
+    plt.xticks(color='white')
+    plt.yticks(color='white')
+    plt.grid(True, linestyle='--', color='gray', alpha=0.5)
+    # Show the plot
+    plt.tight_layout()
+    st.pyplot(fig, use_container_width=False)
+
+
+
+
+
