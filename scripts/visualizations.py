@@ -715,27 +715,45 @@ def plot_fpl_performance_funnel(df, players, player='full_name', total_points_co
     ax.legend(title="Player Performance", loc="upper left", bbox_to_anchor=(0.01, -0.25), frameon=False)
     st.pyplot(fig, use_container_width=False)
     
-def ownership_vs_points_bubble_chart(df: pd.DataFrame, pos: str, min_ownership_pct:float):
+import plotly.express as px
+import pandas as pd
+
+def ownership_vs_points_bubble_chart_with_dropdown(df: pd.DataFrame, min_ownership_pct: float):
     """
-    Create a bubble chart showing ownership percentage vs points scored for players.
+    Create a bubble chart with a dropdown to filter by player position.
     
     Parameters:
         df (pd.DataFrame): The dataset containing player stats.
+        min_ownership_pct (float): The maximum ownership percentage for filtering players.
     """
     # Step 1: Ensure required columns are numeric
     df['selected_by_percent'] = pd.to_numeric(df['selected_by_percent'], errors='coerce')
     df['total_points'] = pd.to_numeric(df['total_points'], errors='coerce')
-    
-    df = df[(df["position"] == pos) & (df["selected_by_percent"] < min_ownership_pct) & (df["selected_by_percent"] > 2)]
-    # Step 2: Create the bubble chart
+    df['now_cost_m'] = pd.to_numeric(df['now_cost_m'], errors='coerce')
+    df['ROI'] = pd.to_numeric(df['ROI'], errors='coerce')
+
+    # Step 2: Get unique positions
+    positions = df['position'].unique()
+
+    # Step 3: Filter data for each position
+    filtered_data = {}
+    for pos in positions:
+        filtered_data[pos] = df[
+            (df['position'] == pos) &
+            (df['selected_by_percent'] < min_ownership_pct) &
+            (df['selected_by_percent'] > 2)
+        ]
+
+    # Step 4: Create the initial figure for the first position
+    initial_position = positions[0]
     fig = px.scatter(
-        df,
+        filtered_data[initial_position],
         x='selected_by_percent',
         y='ROI',
         size='now_cost_m',  # Bubble size based on cost
         color='position',
         hover_name='full_name',
-        title=f"Ownership vs Points Bubble Chart for {pos} for Ownership less than {min_ownership_pct}%",
+        title=f"Ownership vs ROI Bubble Chart for {initial_position} for Ownership less than {min_ownership_pct}%",
         labels={
             'selected_by_percent': 'Ownership Percentage (%)',
             'ROI': 'ROI',
@@ -746,7 +764,7 @@ def ownership_vs_points_bubble_chart(df: pd.DataFrame, pos: str, min_ownership_p
         width=900
     )
 
-    # Customize bubble size using sizeref and sizemin
+    # Customize bubble size
     fig.update_traces(
         marker=dict(
             sizeref=2. * df['now_cost_m'].max() / (10 ** 2),  # Adjust this to scale bubbles down
@@ -756,14 +774,46 @@ def ownership_vs_points_bubble_chart(df: pd.DataFrame, pos: str, min_ownership_p
         )
     )
 
+    # Step 5: Add dropdown for position filtering
+    dropdown_buttons = []
+    for pos in positions:
+        dropdown_buttons.append(
+            dict(
+                label=pos,
+                method="update",
+                args=[
+                    {
+                        "x": [filtered_data[pos]['selected_by_percent']],
+                        "y": [filtered_data[pos]['ROI']],
+                        "marker.size": [filtered_data[pos]['now_cost_m']]
+                    },
+                    {"title": f"Ownership vs ROI Bubble Chart for {pos} for Ownership less than {min_ownership_pct}%"}
+                ]
+            )
+        )
+
+    # Step 6: Add dropdown menu to layout
     fig.update_layout(
+        updatemenus=[
+            dict(
+                buttons=dropdown_buttons,
+                direction="down",
+                showactive=True,
+                x=0.9,
+                y=1.15,
+                xanchor="left",
+                yanchor="top"
+            )
+        ],
         xaxis=dict(title="Ownership Percentage (%)"),
         yaxis=dict(title="ROI"),
         legend=dict(title="Position"),
         coloraxis_colorbar=dict(title="Position")
     )
 
+    # Show the chart
     st.pyplot(fig, use_container_width=False)
+
     
 def plot_player_vs_avg_actual_points(df, full_name):
     # Filter the data for the specific player
