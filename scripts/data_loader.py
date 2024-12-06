@@ -75,7 +75,7 @@ def load_player_data_from_api():
 
     # Ensure all selected columns exist in the DataFrame
     df_final = df_merged[columns_to_use]
-    df_final.loc[:, 'full_name'] = df_final['first_name'] + ' ' + df_final['second_name']
+    df_final.loc[:, 'full_name_pre'] = df_final['first_name'] + ' ' + df_final['second_name']
     # Remove accents from player_names
     
     # Function to remove accents
@@ -86,7 +86,7 @@ def load_player_data_from_api():
         )
 
     # Apply the function to the 'web_name' column
-    df_final['full_name_cleaned'] = df_final['full_name'].apply(remove_accents)
+    df_final['full_name'] = df_final['full_name_pre'].apply(remove_accents)
 
     return df_final
 

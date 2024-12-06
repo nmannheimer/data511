@@ -1,12 +1,13 @@
 import streamlit as st
-from data_loader import load_player_data_from_api
+from data_loader import load_player_data_from_api, load_gameweek_data_from_github
 from team_selection import adjust_selected_players, select_players_for_position
 from team_computation import get_top_players_by_position, adjust_team_to_budget
 from visualizations import (
     draw_soccer_field,
     plot_total_points_comparison,
     plot_team_radar_chart,
-    plot_cost_breakdown_by_position
+    plot_cost_breakdown_by_position,
+    total_points_vs_cost_yearly
 )
 from constants import FORMATION_MAP, BUDGET, COLOR_PALETTE, SECTION_ICONS, POSITION_FULL_NAMES
 import pandas as pd
@@ -22,7 +23,7 @@ def get_player_pred(name, team):
         return 0
 
 st.markdown(
-    f"<h1 style='text-align: center; color: {COLOR_PALETTE['App Title']};'>{SECTION_ICONS['App Title']} Ultimate FPL Manager</h1>",
+    f"<h1 style='text-align: center; color: {COLOR_PALETTE['App Title']};'>{SECTION_ICONS['App Title']} Ultimate FPL Manager<br> GW {load_gameweek_data_from_github('2024-25').GW.max() + 1}</h1>",
     unsafe_allow_html=True
 )
 
@@ -147,10 +148,16 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+total_points_vs_cost_yearly(player_data, 500)
+
+st.divider()
+
 st.markdown(
     f"<h4 style='color: {COLOR_PALETTE['Performance Analysis']};'>{SECTION_ICONS['Performance Analysis']} Total Points Comparison</h4>",
     unsafe_allow_html=True)
 plot_total_points_comparison(selected_players, best_team)
+
+st.divider()
 
 st.markdown(
     f"<h4 style='color: {COLOR_PALETTE['Performance Analysis']};'>{SECTION_ICONS['Performance Analysis']} Average Team Performance Metrics Comparison</h4>",
