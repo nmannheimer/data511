@@ -15,7 +15,7 @@ import plotly.express as px
 import pandas as pd
 
 
-players_pred_df = pd.read_csv("../data/predicted_df.csv")
+players_pred_df = pd.read_csv("../../data/predicted_df.csv")
 def get_player_pred(name, team):
     try:
         name_clean = name.strip().split(".")[-1]
