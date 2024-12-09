@@ -4,19 +4,15 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
 from copy import copy
-
-from streamlit_elements import elements, mui, html, nivo
 from PIL import Image
 import requests
 from io import BytesIO
-
 from sklearn.preprocessing import StandardScaler
 from scipy.spatial.distance import cdist
 import umap
 
-from data_loader import load_player_data_from_api, load_gameweek_data_from_github
-import seaborn as sns
-
+# repo
+from utils.data_loader import load_player_data_from_api, load_gameweek_data_from_github
 from visualizations import plot_transfers_in_out_by_player, plot_fpl_performance_funnel, plot_gw_performance_by_player, radar_chart_player_comparison
 
 def format_keys(metrics):

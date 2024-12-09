@@ -1,7 +1,7 @@
 # team_computation.py
 
 import pandas as pd
-from constants import FORMATION_MAP
+from utils.constants import FORMATION_MAP
 from sklearn.preprocessing import StandardScaler
 from scipy.spatial.distance import cdist
 import umap
