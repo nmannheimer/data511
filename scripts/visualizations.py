@@ -15,7 +15,10 @@ import plotly.express as px
 import pandas as pd
 import os
 from pathlib import Path
+import sys
 
+dir = Path(__file__).abspath()
+sys.append.path(dir.parent.parent)
 
 player_pred_file = Path(os.getcwd()).parent.as_posix() + '/data/predicted_df.csv'
 players_pred_df = pd.read_csv(player_pred_file)
