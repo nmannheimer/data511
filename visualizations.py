@@ -183,21 +183,23 @@ def plot_total_points_comparison(user_team, best_team):
     fig.update_traces(
         texttemplate='%{text:.0f}',
         textposition='outside',
-        textfont=dict(color='black')
+        textfont=dict(color='white')
     )
     fig.update_layout(
-        yaxis=dict(titlefont=dict(color="black"), title='Total Points', tickfont=dict(color="black")),
-        xaxis=dict(titlefont=dict(color="black"), tickfont=dict(color="black")),
-        titlefont=dict(color="black", size=14, family="Arial"),
+        yaxis=dict(titlefont=dict(color="white"), title='Total Points', tickfont=dict(color="white")),
+        xaxis=dict(titlefont=dict(color="white"), tickfont=dict(color="white")),
+        titlefont=dict(color="white", size=14, family="Arial"),
         uniformtext_minsize=8,
         uniformtext_mode='hide',
         showlegend=False,  # Hide legend since team names are on the x-axis
-        paper_bgcolor='#E0FEFF',
-        plot_bgcolor='#E0FEFF',
+        # paper_bgcolor='#E0FEFF',
+        # plot_bgcolor='#E0FEFF',
         title={
             "text": 'Average Metrics Comparison',
             "x": 0.5, "xanchor": "center",
-            "y": 0.9, "yanchor": "top"}
+            "y": 0.9, "yanchor": "top"
+            },
+        font=dict(color="white")
     )
 
 
@@ -280,7 +282,7 @@ def plot_team_radar_chart(user_team, best_team):
                 range=[0, max(max(user_values), max(best_values)) * 1.1]
             ),
             angularaxis=dict(
-                tickfont=dict(color="black")
+                tickfont=dict(color="white")
             )
 
         ),
@@ -291,17 +293,17 @@ def plot_team_radar_chart(user_team, best_team):
             y=-0.5,
             xanchor="right",
             x=1,
-            font=dict(color="black")
+            font=dict(color="white")
         ),
-        titlefont=dict(color="black", size=14, family="Arial"),
-        template='plotly_white',
-        paper_bgcolor = '#E0FEFF',
-        plot_bgcolor = '#E0FEFF',
+        titlefont=dict(color="white", size=14, family="Arial"),
+        template='plotly_dark',
+        # paper_bgcolor = '#E0FEFF',
+        # plot_bgcolor = '#E0FEFF',
         title={
             "text": 'Total Points Comparison',
             "x": 0.5, "xanchor": "center",
             "y": 0.9, "yanchor": "top"},
-        font=dict(color="black")
+            font=dict(color="white")
 
 
     )
@@ -351,7 +353,7 @@ def plot_cost_breakdown_by_position(user_team, best_team):
 
     )
     for annotation in fig['layout']['annotations']:
-        annotation['font']['color'] = 'black'
+        annotation['font']['color'] = 'white'
 
     # Add pie chart for user team
     fig.add_trace(
@@ -362,7 +364,7 @@ def plot_cost_breakdown_by_position(user_team, best_team):
             name='Your Team',
             hoverinfo='label+percent+value',
             textinfo='label+percent',
-            textfont=dict(color='#000000')
+            textfont=dict(color='#FFFFFF')
         ),
         row=1, col=1
     )
@@ -376,7 +378,7 @@ def plot_cost_breakdown_by_position(user_team, best_team):
             name='Best Team',
             hoverinfo='label+percent+value',
             textinfo='label+percent',
-            textfont=dict(color='#000000')
+            textfont=dict(color='#FFFFFF')
         ),
         row=1, col=2
     )
@@ -392,16 +394,16 @@ def plot_cost_breakdown_by_position(user_team, best_team):
             y=-0.4,
             xanchor="right",
             x=0.8,
-            title_font = dict(color='black', size=14, family='Arial'),  # Change legend title color and size
-            font = dict(color='black')
-    ),
-        paper_bgcolor='#E0FEFF',
-        plot_bgcolor='#E0FEFF',
-        template = 'plotly_white',
+            title_font = dict(color='white', size=14, family='Arial'),  # Change legend title color and size
+            font = dict(color='white')
+        ),
+        # paper_bgcolor='#E0FEFF',
+        # plot_bgcolor='#E0FEFF',
+        template = 'plotly_dark',
         margin=dict(t=100, b=150),  # Adjust margins to accommodate legends
         title = {"text":"Your Team vs Best Team Cost Distribution",
                  "x": 0.5, "xanchor": "center", "y": 0.9, "yanchor": "top"},
-        titlefont = dict(color="black")
+        titlefont = dict(color="white")
     )
 
     # Display the pie charts
@@ -488,14 +490,14 @@ def total_points_vs_cost_yearly(df: pd.DataFrame, min_minutes: int = 500):
 
     sliders = [dict(
         active=0,
-        currentvalue={"prefix": "Max Cost: £", "font": {"color": "black", "size": 12}},
+        currentvalue={"prefix": "Max Cost: £", "font": {"color": "white", "size": 12}},
         pad={"t": 50, "b": 20},
         steps=steps,
         transition={"duration": 0},
         lenmode="fraction",
         len=1.0,
-        bgcolor='#d90050',
-        bordercolor="#ccc",
+        # bgcolor='#d90050',
+        # bordercolor="#ccc",
         borderwidth=1
     )]
 
@@ -519,36 +521,36 @@ def total_points_vs_cost_yearly(df: pd.DataFrame, min_minutes: int = 500):
             "text": "Player Points vs. Cost in FPL",
             "x": 0.5, "xanchor": "center",
             "y": 0.9, "yanchor": "top",
-            "font": {"color": "black", "size": 14}
+            "font": {"color": "white", "size": 14}
         },
         xaxis=dict(
             title="Cost (in £ millions)",
             tickformat='.1f',
-            gridcolor='gray',
-            zerolinecolor='gray',
-            linecolor='black',
-            titlefont=dict(color="black"),
-            tickfont=dict(color='black')
+            gridcolor='white',
+            zerolinecolor='white',
+            linecolor='white',
+            titlefont=dict(color="white"),
+            tickfont=dict(color='white')
         ),
         yaxis=dict(
             title="Total Points Scored",
             gridcolor='gray',
             zerolinecolor='gray',
-            linecolor='black',
-            titlefont=dict(color="black"),
-            tickfont=dict(color='black')
+            linecolor='white',
+            titlefont=dict(color="white"),
+            tickfont=dict(color='white')
         ),
         #height=700,
         #width=1000,
-        paper_bgcolor='#E0FEFF',
-        plot_bgcolor='#E0FEFF',
+        # paper_bgcolor='#E0FEFF',
+        # plot_bgcolor='#E0FEFF',
 
         font=dict(
             family="Arial, sans-serif",
-            color='black',
+            color='white',
             size=14
         ),
-        template='plotly_white',
+        template='plotly_dark',
     )
 
     st.plotly_chart(fig, use_container_width=True)
@@ -882,7 +884,7 @@ def ownership_vs_points_bubble_chart_with_dropdown(df: pd.DataFrame, min_ownersh
             'ROI': 'ROI',
             'now_cost_m': 'Cost (in £M)'
         },
-        template='plotly_white',
+        template='plotly_dark',
         #height=600,
         #width=900
     )
@@ -930,13 +932,13 @@ def ownership_vs_points_bubble_chart_with_dropdown(df: pd.DataFrame, min_ownersh
             )
 
         ],
-        xaxis=dict(title="Ownership Percentage (%)", titlefont = dict(color='black'), tickfont = dict(color='black')),
-        yaxis=dict(title="ROI", titlefont = dict(color='black'), tickfont = dict(color='black')),
+        xaxis=dict(title="Ownership Percentage (%)", titlefont = dict(color='white'), tickfont = dict(color='white')),
+        yaxis=dict(title="ROI", titlefont = dict(color='white'), tickfont = dict(color='white')),
         legend=dict(title="Position"),
         coloraxis_colorbar=dict(title="Position"),
-        paper_bgcolor='#E0FEFF',
-        plot_bgcolor='#E0FEFF',
-        titlefont = dict(color='black'),
+        # paper_bgcolor='#E0FEFF',
+        # plot_bgcolor='#E0FEFF',
+        titlefont = dict(color='white'),
         title = {
             'y':0.95,
             'x':0.5,
