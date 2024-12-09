@@ -1,25 +1,3 @@
-import os
-
-# Define the content to write
-config_content = """
-[theme]
-base = "dark"
-"""
-
-# Get the path to the home directory
-home_dir = os.path.expanduser("~")
-
-# Define the filename
-os.makedirs(os.path.join(home_dir, ".streamlit/"), mode=0o777, exist_ok=True)
-file_path = os.path.join(home_dir, ".streamlit/config.toml")
-
-# Write the content to the file
-with open(file_path, "w") as file:
-    file.write(config_content)
-
-
-#########
-
 import streamlit as st
 
 for k, v in st.session_state.items():
