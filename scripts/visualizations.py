@@ -13,9 +13,13 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import plotly.express as px
 import pandas as pd
+import os
+from pathlib import Path
 
 
-players_pred_df = pd.read_csv("../../data/predicted_df.csv")
+player_pred_file = Path(os.getcwd()).parent.as_posix() + '/data/predicted_df.csv'
+players_pred_df = pd.read_csv(player_pred_file)
+
 def get_player_pred(name, team):
     try:
         name_clean = name.strip().split(".")[-1]
