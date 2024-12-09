@@ -1,6 +1,5 @@
 import streamlit as st
-from constants import FORMATION_MAP, POSITION_FULL_NAMES, COLOR_PALETTE, SECTION_ICONS
-
+from utils.constants import FORMATION_MAP, POSITION_FULL_NAMES, COLOR_PALETTE, SECTION_ICONS
 
 def adjust_selected_players(position_counts, player_data):
     for position, count in position_counts.items():

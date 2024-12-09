@@ -1,11 +1,9 @@
-# visualizations.py
-
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
 from streamlit import title
 import pandas as pd
-from constants import FIELD_COORDS_HALF, POSITION_COLORS, COMMON_METRICS, POSITION_METRICS, POSITION_FULL_NAMES
+from utils.constants import FIELD_COORDS_HALF, POSITION_COLORS, COMMON_METRICS, POSITION_METRICS, POSITION_FULL_NAMES
 import streamlit as st
 import numpy as np
 import seaborn as sns
@@ -13,12 +11,8 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import plotly.express as px
 import pandas as pd
-import os
-from pathlib import Path
-import sys
 
-# player_pred_file = Path(os.getcwd()).parent.as_posix() + '/data/predicted_df.csv'
-players_pred_df = pd.read_csv('./predicted_df.csv')
+players_pred_df = pd.read_csv('data/predicted_df.csv')
 
 def get_player_pred(name, team):
     try:

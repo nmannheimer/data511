@@ -3,7 +3,7 @@
 import pandas as pd
 import requests
 import streamlit as st
-from constants import COMMON_METRICS
+from utils.constants import COMMON_METRICS
 import unicodedata
 
 @st.cache_data

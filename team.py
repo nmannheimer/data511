@@ -1,7 +1,7 @@
 import streamlit as st
-from data_loader import load_player_data_from_api, load_gameweek_data_from_github
-from team_selection import adjust_selected_players, select_players_for_position
-from team_computation import get_top_players_by_position, adjust_team_to_budget
+from utils.data_loader import load_player_data_from_api, load_gameweek_data_from_github
+from utils.team_selection import adjust_selected_players, select_players_for_position
+from utils.team_computation import get_top_players_by_position, adjust_team_to_budget
 from visualizations import (
     draw_soccer_field,
     plot_total_points_comparison,
@@ -10,10 +10,10 @@ from visualizations import (
     total_points_vs_cost_yearly,
     ownership_vs_points_bubble_chart_with_dropdown
 )
-from constants import FORMATION_MAP, BUDGET, COLOR_PALETTE, SECTION_ICONS, POSITION_FULL_NAMES
+from utils.constants import FORMATION_MAP, BUDGET, COLOR_PALETTE, SECTION_ICONS, POSITION_FULL_NAMES
 import pandas as pd
 
-players_pred_df = pd.read_csv("../data/predicted_df.csv")
+players_pred_df = pd.read_csv("data/predicted_df.csv")
 
 def get_player_pred(name, team):
     try:
