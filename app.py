@@ -10,6 +10,7 @@ base = "dark"
 home_dir = os.path.expanduser("~")
 
 # Define the filename
+os.makedirs(os.path.join(home_dir, ".streamlit/"), mode=0o777, exist_ok=True)
 file_path = os.path.join(home_dir, ".streamlit/config.toml")
 
 # Write the content to the file
