@@ -186,44 +186,27 @@ if player0 is not None and player1 is not None:
 
     metrics_formatted = format_keys(metrics)
 
-    radar_data = [{"metric": metrics_formatted[0]},
-                  {"metric": metrics_formatted[1]},
-                  {"metric": metrics_formatted[2]},
-                  {"metric": metrics_formatted[3]},
-                  {"metric": metrics_formatted[4]}
-                ]
-    keys_ = [m['metric'] for m in radar_data]
-    for p in selected_players:
-        current_cost = df[df.full_name==p].now_cost / 10.
-        cost_perc = 100. * (current_cost.iloc[0] / BUDGET)
-        pie_data.append({"id": p, "label": p, "value": f'{cost_perc:0.2f}'})
+    # radar_data = [{"metric": metrics_formatted[0]},
+    #               {"metric": metrics_formatted[1]},
+    #               {"metric": metrics_formatted[2]},
+    #               {"metric": metrics_formatted[3]},
+    #               {"metric": metrics_formatted[4]}
+    #             ]
+    # keys_ = [m['metric'] for m in radar_data]
+    # for p in selected_players:
+    #     current_cost = df[df.full_name==p].now_cost / 10.
+    #     cost_perc = 100. * (current_cost.iloc[0] / BUDGET)
+    #     pie_data.append({"id": p, "label": p, "value": f'{cost_perc:0.2f}'})
 
-        radar_data[0][p] = float(df[df.full_name==p][metrics[0]].iloc[0]) if df[df.full_name==p][metrics[0]].iloc[0] != '' else 0
-        radar_data[2][p] = float(df[df.full_name==p][metrics[1]].iloc[0]) if df[df.full_name==p][metrics[1]].iloc[0] != '' else 0
-        radar_data[1][p] = float(df[df.full_name==p][metrics[2]].iloc[0]) if df[df.full_name==p][metrics[2]].iloc[0] != '' else 0
-        radar_data[3][p] = float(df[df.full_name==p][metrics[3]].iloc[0]) if df[df.full_name==p][metrics[3]].iloc[0] != '' else 0
-        radar_data[4][p] = float(df[df.full_name==p][metrics[4]].iloc[0]) if df[df.full_name==p][metrics[4]].iloc[0] != '' else 0
-
-    # st.write(f"Selected player: {selected_players}")
-    # with st.sidebar.expander("Team Performance", expanded=True):
-    #     # TODO: replace this with actual data....
-    #     x = np.linspace(0, 10, 100)
-    #     y = np.sin(x)
-    #     fig, ax = plt.subplots()
-    #     ax.plot(x, y)
-    #     ax.set(xlabel='X-axis', ylabel='Y-axis', title='REPLACE')
-    #     st.pyplot(fig)
+    #     radar_data[0][p] = float(df[df.full_name==p][metrics[0]].iloc[0]) if df[df.full_name==p][metrics[0]].iloc[0] != '' else 0
+    #     radar_data[2][p] = float(df[df.full_name==p][metrics[1]].iloc[0]) if df[df.full_name==p][metrics[1]].iloc[0] != '' else 0
+    #     radar_data[1][p] = float(df[df.full_name==p][metrics[2]].iloc[0]) if df[df.full_name==p][metrics[2]].iloc[0] != '' else 0
+    #     radar_data[3][p] = float(df[df.full_name==p][metrics[3]].iloc[0]) if df[df.full_name==p][metrics[3]].iloc[0] != '' else 0
+    #     radar_data[4][p] = float(df[df.full_name==p][metrics[4]].iloc[0]) if df[df.full_name==p][metrics[4]].iloc[0] != '' else 0
 
     with dash.col[0]:
-        # st.markdown(f'#### {st.session_state.selected_player0}', unsafe_allow_html=True)
-        # url0 = df[df.full_name==st.session_state.selected_player0].photo_url.values[0]
         st.markdown(f'#### {st.session_state.selected_player0}', unsafe_allow_html=True)
         url0 = df[df.full_name==st.session_state.selected_player0].photo_url.values[0]
-        # pic0 = get_prof_pic(url0)
-        # pic0 = np.array(pic0)
-        # pic0[pic0.sum(-1) == 255*3] = 0 #flip background color to match dark theme
-        # st.image(pic0)
-        # Center-align photo and caption using HTML
         st.markdown(
             f"""
             <div style="text-align: center;">
@@ -236,15 +219,13 @@ if player0 is not None and player1 is not None:
         # transfers plot
         plot_transfers_in_out_by_player(player0, df_gh)
 
+        st.divider()
+
         plot_gw_performance_by_player(player0, df_gh)
 
     with dash.col[2]:
         st.markdown(f'#### {st.session_state.selected_player1}', unsafe_allow_html=True)
         url1 = df[df.full_name==st.session_state.selected_player1].photo_url.values[0]
-        pic1 = get_prof_pic(url1)
-        pic1 = np.array(pic1)
-        pic1[pic1.sum(-1) == 255*3] = 0
-        # st.image(pic1)
         st.markdown(
             f"""
             <div style="text-align: center;">
@@ -257,81 +238,15 @@ if player0 is not None and player1 is not None:
         # transfers plot
         plot_transfers_in_out_by_player(player1, df_gh)
 
+        st.divider()
+
         plot_gw_performance_by_player(player1, df_gh)
 
     with dash.col[1]:
-
         radar_chart_player_comparison(df, player0, player1, 
-                                       metrics = ['total_points', 'minutes', 'goals_scored', 'assists', 'clean_sheets', 'goals_conceded', 'selected_by_percent'])
+                                       metrics = ['total_points', 'minutes', 'goals_scored', 
+                                                  'assists', 'goals_conceded', 'clean_sheets', 'selected_by_percent'])
         st.divider()
-        # with elements("nivo_pie_chart"):
-        #     with mui.Box(sx={"height": 300}):
-        #         nivo.Pie(
-        #             data=pie_data,
-        #             margin={"top": 30, "right": 80, "bottom": 50, "left": 80},
-        #             innerRadius=0.5,
-        #             padAngle=0.7,
-        #             cornerRadius=3,
-        #             colors={ "scheme": "nivo" },
-        #             borderWidth=1,
-        #             borderColor={"from": "color", "modifiers": [["darker", 0.2]]},
-        #             radialLabelsSkipAngle=10,
-        #             radialLabelsTextColor="black",
-        #             radialLabelsLinkColor={"from": "color"},
-        #             sliceLabelsSkipAngle=10,
-        #             sliceLabelsTextColor="#ffffff",
-        #             arcLabelsTextColor='#ffffff',
-        #             arcLinkLabelsTextColor='#ffffff',
-        #             arcLinkLabelsColor='#ffffff'
-        #         )
-        # with elements("nivo_charts"):
-            # with mui.Box(sx={"height": 400}):
-            #     nivo.Radar(
-            #         data=radar_data,
-            #         keys=selected_players,
-            #         indexBy="metric",
-            #         valueFormat=">-.2f",
-            #         margin={ "top": 10, "right": 60, "bottom": 10, "left": 60},
-            #         # borderColor={ "from": "color" },
-            #         gridLabelOffset=36,
-            #         dotSize=10,
-            #         # dotColor={ "theme": "background" },
-            #         dotBorderWidth=2,
-            #         motionConfig="wobbly",
-            #         legends=[
-            #             {
-            #                 "anchor": "top-left",
-            #                 "direction": "column",
-            #                 "translateX": -50,
-            #                 "translateY": -70,
-            #                 "itemWidth": 100,
-            #                 "itemHeight": 20,
-            #                 # "itemTextColor": "#ffffff",
-            #                 "symbolSize": 12,
-            #                 "symbolShape": "circle",
-            #                 "effects": [
-            #                     {
-            #                         "on": "hover",
-            #                         # "style": {
-            #                             # "itemTextColor": "#ffffff"
-            #                         # }
-            #                     }
-            #                 ]
-            #             }
-            #         ],
-            #         theme={
-            #             "textColor": "#ffffff",
-            #             "tooltip": {
-            #                 "container": {
-            #                     "background": "#FFFFFF",
-            #                     "color": "#000000",
-            #                 }
-            #             }
-            #         }
-            #     )
-
-        
-
 
     with dash.col[1]:
         # julian's plot

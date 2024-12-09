@@ -79,7 +79,8 @@ COLOR_PALETTE = {
     'Sidebar Budget': '#ebff00',  # Bright Yellow
     'Performance Analysis': '#4eff83',  # Vibrant Green
     'Predicted Points' : '#A020F0',
-    'Gray': '#aaaaaa'             # Gray for neutral elements
+    'Gray': '#aaaaaa',             # Gray for neutral elements
+    'Black': '#000000'
 }
 
 # Combined Color Palette

@@ -4,7 +4,7 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 from streamlit import title
 import pandas as pd
-from utils.constants import FIELD_COORDS_HALF, POSITION_COLORS, COMMON_METRICS, POSITION_METRICS, POSITION_FULL_NAMES
+from utils.constants import FIELD_COORDS_HALF, POSITION_COLORS, COMMON_METRICS, POSITION_METRICS, POSITION_FULL_NAMES, COLOR_PALETTE
 import streamlit as st
 import numpy as np
 import seaborn as sns
@@ -22,7 +22,6 @@ def get_player_pred(name, team):
         return int(x.sort_values(['gw'], ascending = False).pred_points_rounded.iloc[0])
     except:
         return 0
-
 
 def draw_soccer_field(selected_team, formation):
     """Draws a half soccer field with players positioned according to the formation."""
@@ -204,8 +203,6 @@ def plot_total_points_comparison(user_team, best_team):
 
     # Display the chart
     st.plotly_chart(fig, use_container_width=True)
-
-
 
 def plot_team_radar_chart(user_team, best_team):
     """Plots a radar chart comparing average metrics between two teams."""
@@ -564,7 +561,7 @@ def plot_gw_performance_by_player(player_name: str, df: pd.DataFrame):
         data_frame = player_df,
         x = 'GW',
         y = 'total_points',
-        title = f"⚽ {player_name}'s Points Over Each Gameweek 🏟️",
+        title = f"⚽ Points Over Each Gameweek 🏟️<br>{player_name}",
         labels = {'GW' : 'Gameweeks', 'total_points': 'Points Earned'},
         hover_data = {'goals_scored': True, 'assists': True, 'minutes' : True},
         markers = True
@@ -584,28 +581,28 @@ def plot_gw_performance_by_player(player_name: str, df: pd.DataFrame):
     )
 
     fig.update_layout(
-        plot_bgcolor='#E0FEFF',  # Football-themed black background
-        paper_bgcolor='#E0FEFF',
+        # plot_bgcolor='#E0FEFF',  # Football-themed black background
+        # paper_bgcolor='#E0FEFF',
         font=dict(color='black'),
         # font = dict(color = 'white', size = 14),
         title = {'y': 0.9, 'x': 0.5, 'xanchor': 'center', 'yanchor': 'top'},
-        title_font=dict(size=14, color='black', family='Arial Black'),
+        title_font=dict(size=14, color='white', family='Arial Black'),
         xaxis=dict(
             gridcolor='gray',
             linecolor='gray',
-            tickfont=dict(color='black'),
-            titlefont=dict(color='black'),
+            tickfont=dict(color='white'),
+            titlefont=dict(color='white'),
         ),
         yaxis=dict(
             gridcolor='gray',
             linecolor='gray',
-            tickfont=dict(color='black'),
+            tickfont=dict(color='white'),
             rangemode='tozero',
-            titlefont=dict(color='black'),
+            titlefont=dict(color='white'),
         ),
         height = 500,
         width = 600,
-        template='plotly_white',
+        template='plotly_dark',
     )
     st.plotly_chart(fig, use_container_width=True)
 
@@ -642,24 +639,24 @@ def plot_transfers_in_out_by_player(player_name: str, df: pd.DataFrame):
 
     # Update layout
     fig.update_layout(
-        xaxis=dict(title='Gameweek', tickmode='linear', gridcolor='gray', titlefont=dict(color='black'), tickfont=dict(color='black')),
-        yaxis=dict(title='Transfers', gridcolor='gray', titlefont=dict(color='black'), tickfont=dict(color='black'), range=[0, player_df['transfers_in'].max() + 2]),
+        xaxis=dict(title='Gameweek', tickmode='linear', gridcolor='gray', titlefont=dict(color='white'), tickfont=dict(color='white')),
+        yaxis=dict(title='Transfers', gridcolor='gray', titlefont=dict(color='white'), tickfont=dict(color='white')),
         height=600,
         width=600,
-        plot_bgcolor='#E0FEFF',  # Football-themed black background
-        paper_bgcolor='#E0FEFF',
+        # plot_bgcolor='#E0FEFF',  # Football-themed black background
+        # paper_bgcolor='#E0FEFF',
         font=dict(color='black'),
-        title_font=dict(size=14, color='black', family='Arial'),
+        title_font=dict(size=14, color='white', family='Arial'),
         legend=dict(
             orientation="h",
             yanchor="bottom",
             y=1.02,
             xanchor="center",
             x=0.5,
-            font=dict(color='black')
+            # font=dict(color='black')
         ),
-        template='plotly_white',
-        title={ "text": f"Transfers In and Out Per Gameweek: \n{player_name}",
+        template='plotly_dark',
+        title={ "text": f"Transfers In and Out Per Gameweek: <br>{player_name}",
             'y': 0.95,
             'x': 0.5,
             'xanchor': 'center',
@@ -723,7 +720,8 @@ def radar_chart_player_comparison(df: pd.DataFrame, player1: str, player2: str, 
         color='full_name',
         line_close=True,
         title=f"{player1} vs {player2}",
-        template="plotly_white"
+        template="plotly_white",
+        width=500, height=375
     )
 
     # Customize layout
@@ -733,14 +731,20 @@ def radar_chart_player_comparison(df: pd.DataFrame, player1: str, player2: str, 
             radialaxis=dict(visible=True, range=[0, 1]),  # Normalized range
             angularaxis=dict(showline=True, tickfont=dict(size=12))
         ),
-        title_font=dict(size=14, family='Arial', color='black'),
-        legend=dict(title = "Players", title_font=dict(size=12, family='Arial', color='black'), orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5, font=dict(color='black')),
-        paper_bgcolor='#E0FEFF',
-        plot_bgcolor='#E0FEFF',
-        font=dict(color='black'),
+        title_font=dict(size=14, family='Arial', color='white'),
+        legend=dict(title = "Players", 
+                    title_font=dict(size=12, family='Arial', color='white'), 
+                    orientation="h",
+                    yanchor="bottom",
+                    y=-0.4, 
+                    xanchor="center", x=0.5,
+                    font=dict(color='white')),
+        # paper_bgcolor='#0F1116',
+        # plot_bgcolor='#E0FEFF',
+        font=dict(color='white'),
         showlegend=True,
         margin = dict(b=50),
-        template='plotly_white',
+        template='plotly_dark',
         title={
             'y': 0.95,
             'x': 0.5,
@@ -784,7 +788,7 @@ def top_n_roi_by_position(df: pd.DataFrame, pos:str, top_n:int = 5):
 
 def plot_fpl_performance_funnel(df, players, player='full_name', total_points_column='total_points', xp_column='xP'):
     # Set the background to black
-    plt.style.use('seaborn')
+    plt.style.use('dark_background')
     # Filter the dataframe for the players in the list
     df_filtered = df[df[player].isin(players)]
     # If the filtered dataframe is empty, inform the user
@@ -834,9 +838,9 @@ def plot_fpl_performance_funnel(df, players, player='full_name', total_points_co
     ax.set_xlabel(f"Expected Points ({xp_column})", fontsize=10, color='white')
     ax.set_ylabel(f"Total Points ({total_points_column})", fontsize=10, color='white')
     ax.legend(title="Player Performance", loc="upper left", bbox_to_anchor=(0.01, -0.25), frameon=False, labelcolor='white')
-    st.pyplot(fig, use_container_width=False)
+    plt.grid(alpha=0.25)
+    st.pyplot(fig, use_container_width=True)
 
-    
 
 def ownership_vs_points_bubble_chart_with_dropdown(df: pd.DataFrame, min_ownership_pct: float):
     """

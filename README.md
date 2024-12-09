@@ -5,10 +5,6 @@
 Run the following within your conda env to execute the main dash:
 
 ```bash
-cd scripts
-```
-
-```bash
 streamlit run app.py
 ```
 
