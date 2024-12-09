@@ -126,5 +126,11 @@ def get_similar_players(df: pd.DataFrame, player_name:str, top_n: int = 5):
 
     same_position_players = df[df['position'] == target_position]['web_name']
     distances = distance_df_umap.loc[player_name, same_position_players]
-    similar_players = distances.sort_values()[1:top_n+1]  # Exclude self (distance = 0)
+    # Normalize similarity scores (invert distances and normalize)
+    similarity_scores = 1 / (1 + distances)  # Invert distances to get similarity
+    normalized_scores = (similarity_scores - similarity_scores.min()) / (similarity_scores.max() - similarity_scores.min())
+
+    # Get top N most similar players (excluding the player itself)
+    similar_players = normalized_scores.sort_values(ascending=False)[1:top_n + 1]  # Exclude self (similarity = 1)
+    
     return similar_players

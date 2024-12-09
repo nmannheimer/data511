@@ -223,10 +223,19 @@ if player0 is not None and player1 is not None:
         # url0 = df[df.full_name==st.session_state.selected_player0].photo_url.values[0]
         st.markdown(f'#### {st.session_state.selected_player0}', unsafe_allow_html=True)
         url0 = df[df.full_name==st.session_state.selected_player0].photo_url.values[0]
-        pic0 = get_prof_pic(url0)
-        pic0 = np.array(pic0)
-        pic0[pic0.sum(-1) == 255*3] = 0 #flip background color to match dark theme
-        st.image(pic0)
+        # pic0 = get_prof_pic(url0)
+        # pic0 = np.array(pic0)
+        # pic0[pic0.sum(-1) == 255*3] = 0 #flip background color to match dark theme
+        # st.image(pic0)
+        # Center-align photo and caption using HTML
+        st.markdown(
+            f"""
+            <div style="text-align: center;">
+                <img src="{url0}" style="width:200px; border-radius:10%;">
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
         # transfers plot
         plot_transfers_in_out_by_player(player0, df_gh)
@@ -239,7 +248,15 @@ if player0 is not None and player1 is not None:
         pic1 = get_prof_pic(url1)
         pic1 = np.array(pic1)
         pic1[pic1.sum(-1) == 255*3] = 0
-        st.image(pic1)
+        # st.image(pic1)
+        st.markdown(
+            f"""
+            <div style="text-align: center;">
+                <img src="{url1}" style="width:200px; border-radius:10%;">
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
         # transfers plot
         plot_transfers_in_out_by_player(player1, df_gh)

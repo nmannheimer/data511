@@ -143,7 +143,7 @@ with col2:
                         st.markdown(
                             f"""
                             <div style="text-align: center;">
-                                <img src="{photo_url}" style="width:80px; border-radius:50%;">
+                                <img src="{photo_url}" style="width:80px; border-radius:40%;">
                                 <p style="margin-top:5px;">{player['web_name']}</p>
                             </div>
                             """,
