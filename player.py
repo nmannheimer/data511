@@ -56,7 +56,7 @@ def get_similar_players(df_new: pd.DataFrame, player_name:str, target_position=N
     scaler = StandardScaler()
     normalized_features = scaler.fit_transform(filtered_data[numeric_features])
 
-    umap_reducer = umap.UMAP(n_neighbors=5, min_dist=0.1, n_components=2)
+    umap_reducer = umap.UMAP(n_neighbors=5, min_dist=0.1, n_components=2, random_state=1337)
     umap_features = umap_reducer.fit_transform(normalized_features)
 
     distance_matrix_umap = cdist(umap_features, umap_features, metric='euclidean')
