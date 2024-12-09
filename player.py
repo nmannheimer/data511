@@ -147,7 +147,7 @@ with dash.col[0]:
     player0 = st.selectbox(
         "Select first player:",
         players,
-        index=None,
+        index=10, #default value for user not come to an empty page, required
         key='p0'
     )
 
@@ -155,7 +155,7 @@ with dash.col[2]:
     player1 = st.selectbox(
         "Select second player:",
         players,
-        index=None,
+        index=5, #default value for user not come to an empty page, not required
         key='p1'
     )
 

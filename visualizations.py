@@ -1,9 +1,19 @@
+<<<<<<< HEAD:scripts/visualizations.py
+# visualizations.py
+from tempfile import template
+
+=======
+>>>>>>> main:visualizations.py
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
 from streamlit import title
 import pandas as pd
+<<<<<<< HEAD:scripts/visualizations.py
+from constants import COLOR_PALETTE, POSITION_COLORS, FORMATION_MAP, FIELD_COORDS_HALF, POSITION_COLORS, COMMON_METRICS, POSITION_METRICS, POSITION_FULL_NAMES
+=======
 from utils.constants import FIELD_COORDS_HALF, POSITION_COLORS, COMMON_METRICS, POSITION_METRICS, POSITION_FULL_NAMES
+>>>>>>> main:visualizations.py
 import streamlit as st
 import numpy as np
 import seaborn as sns
@@ -12,7 +22,14 @@ from matplotlib.lines import Line2D
 import plotly.express as px
 import pandas as pd
 
+<<<<<<< HEAD:scripts/visualizations.py
+# player_pred_file = Path(os.getcwd()).parent.as_posix() + '/data/predicted_df.csv'
+#players_pred_df = pd.read_csv('./predicted_df.csv')
+
+players_pred_df = pd.read_csv("../data/predicted_df.csv")
+=======
 players_pred_df = pd.read_csv('data/predicted_df.csv')
+>>>>>>> main:visualizations.py
 
 def get_player_pred(name, team):
     try:
@@ -46,15 +63,15 @@ def draw_soccer_field(selected_team, formation):
             domain=[0, 1],  # Fill the entire width
         ),
         yaxis=dict(
-            range=[0, field_height],
+            range=[0, field_height*.75],
             showgrid=False,
             zeroline=False,
             visible=False,
             fixedrange=True,
             domain=[0, 1],  # Fill the entire height
         ),
-        width=700,  # Adjusted figure width for good aspect ratio
-        height=600,  # Adjusted figure height for half-field
+        width=650,  # Adjusted figure width for good aspect ratio
+        height=750,  # Adjusted figure height for half-field
         margin=dict(l=0, r=0, t=0, b=0),  # Remove all margins
         plot_bgcolor=field_color,
         paper_bgcolor=field_color,
@@ -63,7 +80,7 @@ def draw_soccer_field(selected_team, formation):
 
     # Draw field boundaries and markings (only half-field)
     # Field boundary
-    fig.add_shape(type="rect", x0=0, x1=field_width, y0=0, y1=field_height,
+    fig.add_shape(type="rect", x0=0, x1=field_width, y0=field_height*.75, y1=field_height*.75,
                   line=dict(color=line_color, width=2), layer='below')
 
     # Center line (midfield line)
@@ -81,7 +98,7 @@ def draw_soccer_field(selected_team, formation):
                   line=dict(color=line_color, width=2), layer='below')
 
     # Center circle
-    fig.add_shape(type="circle", x0=30, x1=50, y0=31, y1=49,
+    fig.add_shape(type="circle", x0=35, x1=45, y0=37, y1=43,
                   xref="x", yref="y",
                   line=dict(color=line_color, width=2), layer='below')
     # Center spot
@@ -175,7 +192,7 @@ def plot_total_points_comparison(user_team, best_team):
         y='Total Points',
         text='Total Points',
         color='Team',
-        title='Total Points Comparison',
+        title='Your Team vs. Best Team Total Points Comparison',
         color_discrete_map=TEAM_COLOR_MAP
     )
 
@@ -183,14 +200,23 @@ def plot_total_points_comparison(user_team, best_team):
     fig.update_traces(
         texttemplate='%{text:.0f}',
         textposition='outside',
+        textfont=dict(color='black')
     )
     fig.update_layout(
+        yaxis=dict(titlefont=dict(color="black"), title='Total Points', tickfont=dict(color="black")),
+        xaxis=dict(titlefont=dict(color="black"), tickfont=dict(color="black")),
+        titlefont=dict(color="black", size=14, family="Arial"),
         uniformtext_minsize=8,
         uniformtext_mode='hide',
         showlegend=False,  # Hide legend since team names are on the x-axis
-        xaxis_title='',  # Remove x-axis title for a cleaner look
-        yaxis_title='Total Points',
+        paper_bgcolor='#E0FEFF',
+        plot_bgcolor='#E0FEFF',
+        title={
+            "text": 'Average Metrics Comparison',
+            "x": 0.5, "xanchor": "center",
+            "y": 0.9, "yanchor": "top"}
     )
+
 
     # Display the chart
     st.plotly_chart(fig, use_container_width=True)
@@ -209,21 +235,15 @@ def plot_team_radar_chart(user_team, best_team):
             # Initialize averages with zeros if team is empty
             return {metric: 0 for metric in metrics}
         df = pd.DataFrame(team)
-        df['Points Per Game'] = pd.to_numeric(df['points_per_game'], errors='coerce').fillna(0)
-        df['Selected By (%)'] = pd.to_numeric(df['selected_by_percent'], errors='coerce').fillna(0)
-        df['threat'] = pd.to_numeric(df['threat'], errors='coerce').fillna(0)
-        df['influence'] = pd.to_numeric(df['influence'], errors='coerce').fillna(0)
-        df['creativity'] = pd.to_numeric(df['creativity'], errors='coerce').fillna(0)
+        df['Points Per Game'] = pd.to_numeric(df['points_per_game'], errors='coerce').fillna(0)/10
+        df['Selected By (%)'] = pd.to_numeric(df['selected_by_percent'], errors='coerce').fillna(0)/100
 
         averages = {
-            'Goals Scored': df['goals_scored'].mean(),
-            'Assists': df['assists'].mean(),
-            'Clean Sheets': df['clean_sheets'].mean(),
+            'Goals Scored': df['goals_scored'].mean()/10,
+            'Assists': df['assists'].mean()/7,
+            'Clean Sheets': df['clean_sheets'].mean()/8,
             'Points Per Game': df['Points Per Game'].mean(),
-            'Selected By (%)': df['Selected By (%)'].mean(),
-            #'Threat': df['threat'].mean(),
-            #'Influence': df['influence'].mean(),
-            #'Creativity': df['creativity'].mean()
+            'Selected By (%)': df['Selected By (%)'].mean()
         }
 
         # Extract the values and compute min and max
@@ -267,7 +287,9 @@ def plot_team_radar_chart(user_team, best_team):
         fill='toself',
         name='Best Team',
         line_color='#04f5ff',
-        opacity=0.7
+        opacity=0.7,
+        textfont = dict(color='red')
+
     ))
 
     fig.update_layout(
@@ -275,10 +297,32 @@ def plot_team_radar_chart(user_team, best_team):
             radialaxis=dict(
                 visible=True,
                 range=[0, max(max(user_values), max(best_values)) * 1.1]
+            ),
+            angularaxis=dict(
+                tickfont=dict(color="black")
             )
+
         ),
         showlegend=True,
-        template='plotly_dark'
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-0.5,
+            xanchor="right",
+            x=1,
+            font=dict(color="black")
+        ),
+        titlefont=dict(color="black", size=14, family="Arial"),
+        template='plotly_white',
+        paper_bgcolor = '#E0FEFF',
+        plot_bgcolor = '#E0FEFF',
+        title={
+            "text": 'Total Points Comparison',
+            "x": 0.5, "xanchor": "center",
+            "y": 0.9, "yanchor": "top"},
+        font=dict(color="black")
+
+
     )
 
     st.plotly_chart(fig, use_container_width=True)
@@ -322,8 +366,11 @@ def plot_cost_breakdown_by_position(user_team, best_team):
     fig = make_subplots(
         rows=1, cols=2,
         specs=[[{'type': 'domain'}, {'type': 'domain'}]],
-        subplot_titles=('Your Team', 'Best Team')
+        subplot_titles=('Your Team', 'Best Team'),
+
     )
+    for annotation in fig['layout']['annotations']:
+        annotation['font']['color'] = 'black'
 
     # Add pie chart for user team
     fig.add_trace(
@@ -353,35 +400,45 @@ def plot_cost_breakdown_by_position(user_team, best_team):
         row=1, col=2
     )
 
+
     # Update layout for aesthetics
     fig.update_layout(
         showlegend=True,  # Enable legends
-        legend_title="Position",
+        legend_title="Field Position",
         legend=dict(
             orientation="h",
             yanchor="bottom",
-            y=-0.2,
-            xanchor="center",
-            x=0.5
-        ),
-        margin=dict(t=50, b=150)  # Adjust margins to accommodate legends
+            y=-0.4,
+            xanchor="right",
+            x=0.8,
+            title_font = dict(color='black', size=14, family='Arial'),  # Change legend title color and size
+            font = dict(color='black')
+    ),
+        paper_bgcolor='#E0FEFF',
+        plot_bgcolor='#E0FEFF',
+        template = 'plotly_white',
+        margin=dict(t=100, b=150),  # Adjust margins to accommodate legends
+        title = {"text":"Your Team vs Best Team Cost Distribution",
+                 "x": 0.5, "xanchor": "center", "y": 0.9, "yanchor": "top"},
+        titlefont = dict(color="black")
     )
 
     # Display the pie charts
     st.plotly_chart(fig, use_container_width=True)
 
+
 def total_points_vs_cost_yearly(df: pd.DataFrame, min_minutes: int = 500):
     """Plots a scatter plot of Points Scored vs Cost that can dynamically be adjusted based on position and cost."""
-    
+
     # Step 1: Filter DataFrame by minimum minutes played
     filtered_df = df[df["minutes"] > min_minutes]
     filtered_df["now_cost_m"] = filtered_df["now_cost"] / 10  # Convert cost to millions
 
-    # Step 2: Create scatter plot
+    # Positions
     positions = filtered_df['position'].unique().tolist()
     fig = go.Figure()
 
-    # Add scatter trace for all positions
+    # Step 2: Create scatter plot with POSITION_COLORS
     for pos in positions:
         position_data = filtered_df[filtered_df['position'] == pos]
         fig.add_trace(
@@ -390,7 +447,12 @@ def total_points_vs_cost_yearly(df: pd.DataFrame, min_minutes: int = 500):
                 y=position_data['total_points'],
                 mode='markers',
                 name=pos,
-                marker=dict(size=8, opacity=0.7),
+                marker=dict(
+                    size=9,
+                    opacity=0.8,
+                    line=dict(width=1, color='white'),
+                    color=POSITION_COLORS.get(pos, COLOR_PALETTE['Gray'])  # Fallback to Gray if not found
+                ),
                 customdata=position_data[['web_name', 'position']],
                 hovertemplate=(
                     '<b>%{customdata[0]}</b><br>'
@@ -419,7 +481,7 @@ def total_points_vs_cost_yearly(df: pd.DataFrame, min_minutes: int = 500):
                 label=pos,
                 method="update",
                 args=[
-                    {"visible": [trace.name == pos for trace in fig.data]},  # Filter traces by position
+                    {"visible": [trace.name == pos for trace in fig.data]},
                     {"title": f"Player Points vs. Cost ({pos})"}
                 ]
             )
@@ -432,25 +494,28 @@ def total_points_vs_cost_yearly(df: pd.DataFrame, min_minutes: int = 500):
     steps = []
     for cost in range(min_cost, max_cost + 1):
         step = dict(
-            method="restyle",  # Use restyle for performance
+            method="restyle",
             args=[
                 {
                     "x": [trace.x[trace.x <= cost] if trace.x is not None else [] for trace in fig.data],
                     "y": [trace.y[trace.x <= cost] if trace.y is not None else [] for trace in fig.data]
                 }
             ],
-            label=f"£{cost}M"
+            label=f"{cost}M"
         )
         steps.append(step)
 
     sliders = [dict(
         active=0,
-        currentvalue={"prefix": "Max Cost: £"},
-        pad={"t": 50},
+        currentvalue={"prefix": "Max Cost: £", "font": {"color": "black", "size": 12}},
+        pad={"t": 50, "b": 20},
         steps=steps,
-        transition={"duration": 0},  # Disable hover updates
+        transition={"duration": 0},
         lenmode="fraction",
-        len=1.0
+        len=1.0,
+        bgcolor='#d90050',
+        bordercolor="#ccc",
+        borderwidth=1
     )]
 
     # Step 5: Update layout with dropdown and sliders
@@ -461,16 +526,48 @@ def total_points_vs_cost_yearly(df: pd.DataFrame, min_minutes: int = 500):
                 buttons=dropdown_buttons,
                 direction="down",
                 showactive=True,
-                x=0.8,  # Shift the dropdown horizontally to the right
-                y=1   # Position the dropdown slightly below the title
+                x=0.8,
+                y=1,
+                bgcolor="#9EFDFF",
+                bordercolor='#d90050',
+                borderwidth=1,
+                font=dict(color="black")
             )
         ],
-        title="Player Points vs. Cost in Fantasy Premier League",
-        xaxis=dict(title="Cost (in £ millions)", tickformat='.1f'),
-        yaxis=dict(title="Total Points Scored", gridcolor='lightgrey'),
-        height=700,
-        width=1000,
-        template='plotly_white'
+        title={
+            "text": "Player Points vs. Cost in FPL",
+            "x": 0.5, "xanchor": "center",
+            "y": 0.9, "yanchor": "top",
+            "font": {"color": "black", "size": 14}
+        },
+        xaxis=dict(
+            title="Cost (in £ millions)",
+            tickformat='.1f',
+            gridcolor='gray',
+            zerolinecolor='gray',
+            linecolor='black',
+            titlefont=dict(color="black"),
+            tickfont=dict(color='black')
+        ),
+        yaxis=dict(
+            title="Total Points Scored",
+            gridcolor='gray',
+            zerolinecolor='gray',
+            linecolor='black',
+            titlefont=dict(color="black"),
+            tickfont=dict(color='black')
+        ),
+        #height=700,
+        #width=1000,
+        paper_bgcolor='#E0FEFF',
+        plot_bgcolor='#E0FEFF',
+
+        font=dict(
+            family="Arial, sans-serif",
+            color='black',
+            size=14
+        ),
+        template='plotly_white',
     )
 
     st.plotly_chart(fig, use_container_width=True)
@@ -490,8 +587,8 @@ def plot_gw_performance_by_player(player_name: str, df: pd.DataFrame):
     )
 
     fig.update_traces(
-        line = dict(color = 'white', width = 3, dash = 'solid'),
-        marker = dict(size = 10, color = 'yellow', symbol = 'circle'),
+        line = dict(color = '#AB63FA', width = 3, dash = 'solid'),
+        marker = dict(size = 10, color = '#AB63FA', symbol = 'circle'),
         hovertemplate = (
             '<b>Gameweek %{x}</b><br>'
             'Points: %{y}<br>'
@@ -503,24 +600,28 @@ def plot_gw_performance_by_player(player_name: str, df: pd.DataFrame):
     )
 
     fig.update_layout(
-        plot_bgcolor='black',  # Football-themed black background
-        paper_bgcolor='black',
-        font=dict(color='white'),
+        plot_bgcolor='#E0FEFF',  # Football-themed black background
+        paper_bgcolor='#E0FEFF',
+        font=dict(color='black'),
         # font = dict(color = 'white', size = 14),
-        title_font=dict(size=14, color='yellow', family='Arial Black'),
+        title = {'y': 0.9, 'x': 0.5, 'xanchor': 'center', 'yanchor': 'top'},
+        title_font=dict(size=14, color='black', family='Arial Black'),
         xaxis=dict(
-            gridcolor='white',
-            linecolor='white',
-            tickfont=dict(color='white'),
+            gridcolor='gray',
+            linecolor='gray',
+            tickfont=dict(color='black'),
+            titlefont=dict(color='black'),
         ),
         yaxis=dict(
-            gridcolor='white',
-            linecolor='white',
-            tickfont=dict(color='white'),
+            gridcolor='gray',
+            linecolor='gray',
+            tickfont=dict(color='black'),
             rangemode='tozero',
+            titlefont=dict(color='black'),
         ),
         height = 500,
-        width = 600
+        width = 600,
+        template='plotly_white',
     )
     st.plotly_chart(fig, use_container_width=True)
 
@@ -538,7 +639,7 @@ def plot_transfers_in_out_by_player(player_name: str, df: pd.DataFrame):
             y=player_df['transfers_in'],
             mode='lines+markers',
             name='Transfers In',
-            line=dict(color='green', width=3),
+            line=dict(color='#04f5ff', width=3),
             marker=dict(size=8)
         )
     )
@@ -550,29 +651,37 @@ def plot_transfers_in_out_by_player(player_name: str, df: pd.DataFrame):
             y=player_df['transfers_out'],
             mode='lines+markers',
             name='Transfers Out',
-            line=dict(color='red', width=3),
+            line=dict(color='#e90052', width=3),
             marker=dict(size=8)
         )
     )
 
     # Update layout
     fig.update_layout(
-        title=f"Transfers In and Out Per Gameweek: \n{player_name}",
-        xaxis=dict(title='Gameweek', tickmode='linear', gridcolor='gray'),
-        yaxis=dict(title='Transfers', gridcolor='gray'),
+        xaxis=dict(title='Gameweek', tickmode='linear', gridcolor='gray', titlefont=dict(color='black'), tickfont=dict(color='black')),
+        yaxis=dict(title='Transfers', gridcolor='gray', titlefont=dict(color='black'), tickfont=dict(color='black'), range=[0, player_df['transfers_in'].max() + 2]),
         height=600,
         width=600,
-        plot_bgcolor='black',  # Football-themed black background
-        paper_bgcolor='black',
-        font=dict(color='white'),
-        title_font=dict(size=14, color='white', family='Arial'),
+        plot_bgcolor='#E0FEFF',  # Football-themed black background
+        paper_bgcolor='#E0FEFF',
+        font=dict(color='black'),
+        title_font=dict(size=14, color='black', family='Arial'),
         legend=dict(
             orientation="h",
             yanchor="bottom",
             y=1.02,
             xanchor="center",
-            x=0.5
-        )
+            x=0.5,
+            font=dict(color='black')
+        ),
+        template='plotly_white',
+        title={ "text": f"Transfers In and Out Per Gameweek: \n{player_name}",
+            'y': 0.95,
+            'x': 0.5,
+            'xanchor': 'center',
+            'yanchor': 'top'
+        },
+
     )
 
     # Show the chart
@@ -588,6 +697,17 @@ def radar_chart_player_comparison(df: pd.DataFrame, player1: str, player2: str, 
         player2 (str): The name of the second player.
         metrics (list): List of metric columns to compare. This should ideally vary between different positions.
     """
+
+    # Metric to label mapping
+    METRIC_LABELS = {
+        'total_points': 'Total Points',
+        'minutes': 'Minutes Played',
+        'goals_scored': 'Goals Scored',
+        'assists': 'Assists',
+        'clean_sheets': 'Clean Sheets',
+        'goals_conceded': 'Goals Conceded',
+        'selected_by_percent': 'Ownership (%)'
+    }
      # Step 1: Ensure numeric columns for the metrics
     for metric in metrics:
         df[metric] = pd.to_numeric(df[metric], errors='coerce')
@@ -607,6 +727,10 @@ def radar_chart_player_comparison(df: pd.DataFrame, player1: str, player2: str, 
 
     # Step 5: Reshape the data for radar plotting
     melted_df = players_df.melt(id_vars='full_name', var_name='metric', value_name='value')
+
+    # Map the 'metric' column values to user-friendly labels
+    melted_df['metric'] = melted_df['metric'].apply(lambda x: METRIC_LABELS.get(x, x))
+
     # Step 6: Create radar chart
     fig = px.line_polar(
         melted_df,
@@ -614,8 +738,8 @@ def radar_chart_player_comparison(df: pd.DataFrame, player1: str, player2: str, 
         theta='metric',
         color='full_name',
         line_close=True,
-        title=f"Player Comparison: {player1} vs {player2}",
-        template="plotly_dark"
+        title=f"{player1} vs {player2}",
+        template="plotly_white"
     )
 
     # Customize layout
@@ -625,8 +749,21 @@ def radar_chart_player_comparison(df: pd.DataFrame, player1: str, player2: str, 
             radialaxis=dict(visible=True, range=[0, 1]),  # Normalized range
             angularaxis=dict(showline=True, tickfont=dict(size=12))
         ),
-        title_font=dict(size=20, family='Arial'),
-        legend=dict(title="Players", orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5)
+        title_font=dict(size=14, family='Arial', color='black'),
+        legend=dict(title = "Players", title_font=dict(size=12, family='Arial', color='black'), orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5, font=dict(color='black')),
+        paper_bgcolor='#E0FEFF',
+        plot_bgcolor='#E0FEFF',
+        font=dict(color='black'),
+        showlegend=True,
+        margin = dict(b=50),
+        template='plotly_white',
+        title={
+            'y': 0.95,
+            'x': 0.5,
+            'xanchor': 'center',
+            'yanchor': 'top'
+        }
+
     )
 
     st.plotly_chart(fig, use_container_width=True)
@@ -663,7 +800,7 @@ def top_n_roi_by_position(df: pd.DataFrame, pos:str, top_n:int = 5):
 
 def plot_fpl_performance_funnel(df, players, player='full_name', total_points_column='total_points', xp_column='xP'):
     # Set the background to black
-    plt.style.use('dark_background')
+    plt.style.use('seaborn')
     # Filter the dataframe for the players in the list
     df_filtered = df[df[player].isin(players)]
     # If the filtered dataframe is empty, inform the user
@@ -681,10 +818,10 @@ def plot_fpl_performance_funnel(df, players, player='full_name', total_points_co
     df_filtered = pd.merge(df_filtered, residual_stats[[player, 'mean_residual', 'std_residual']], 
                            on=player, how='left')
     # Define custom colors for the first two players (green, red) and others (random colors)
-    colors = ['green', 'red']
+    colors = ['#04f5ff', '#e90052', 'white']
     
     fig, ax = plt.subplots(figsize=(5,5), frameon=False)
-    custom_palette = sns.color_palette(["red", "green"])
+    custom_palette = sns.color_palette(['#04f5ff', '#e90052'])
     # Scatter plot of actual points (total_points) vs expected points (xP)
     sns.scatterplot(data=df_filtered, 
                     x=xp_column, 
@@ -712,8 +849,9 @@ def plot_fpl_performance_funnel(df, players, player='full_name', total_points_co
     ax.set_title("FPL Performance Funnel Plot:\nActual vs Expected Points", fontsize=12, color='white')
     ax.set_xlabel(f"Expected Points ({xp_column})", fontsize=10, color='white')
     ax.set_ylabel(f"Total Points ({total_points_column})", fontsize=10, color='white')
-    ax.legend(title="Player Performance", loc="upper left", bbox_to_anchor=(0.01, -0.25), frameon=False)
+    ax.legend(title="Player Performance", loc="upper left", bbox_to_anchor=(0.01, -0.25), frameon=False, labelcolor='white')
     st.pyplot(fig, use_container_width=False)
+
     
 
 def ownership_vs_points_bubble_chart_with_dropdown(df: pd.DataFrame, min_ownership_pct: float):
@@ -750,15 +888,15 @@ def ownership_vs_points_bubble_chart_with_dropdown(df: pd.DataFrame, min_ownersh
         size='now_cost_m',  # Bubble size based on cost
         color='position',
         hover_name='full_name',
-        title=f"Ownership vs ROI Bubble Chart for {initial_position} for Ownership less than {min_ownership_pct}%",
+        title=f"ROI for {initial_position} players for Ownership less than {min_ownership_pct}%",
         labels={
             'selected_by_percent': 'Ownership Percentage (%)',
             'ROI': 'ROI',
             'now_cost_m': 'Cost (in £M)'
         },
         template='plotly_white',
-        height=600,
-        width=900
+        #height=600,
+        #width=900
     )
     # Customize bubble size
     fig.update_traces(
@@ -782,7 +920,8 @@ def ownership_vs_points_bubble_chart_with_dropdown(df: pd.DataFrame, min_ownersh
                         "y": [filtered_data[pos]['ROI']],
                         "marker.size": [filtered_data[pos]['now_cost_m']]
                     },
-                    {"title": f"Ownership vs ROI Bubble Chart for {pos} for Ownership less than {min_ownership_pct}%"}
+                    {"title": f"ROI for {pos} players for Ownership less than {min_ownership_pct}%"
+                     }
                 ]
             )
         )
@@ -796,13 +935,27 @@ def ownership_vs_points_bubble_chart_with_dropdown(df: pd.DataFrame, min_ownersh
                 x=0.9,
                 y=1.15,
                 xanchor="left",
-                yanchor="top"
+                yanchor="top",
+                bgcolor='#9EFDFF',
+                bordercolor='#d90050',
+                font = dict(color='black')
             )
+
         ],
-        xaxis=dict(title="Ownership Percentage (%)"),
-        yaxis=dict(title="ROI"),
+        xaxis=dict(title="Ownership Percentage (%)", titlefont = dict(color='black'), tickfont = dict(color='black')),
+        yaxis=dict(title="ROI", titlefont = dict(color='black'), tickfont = dict(color='black')),
         legend=dict(title="Position"),
-        coloraxis_colorbar=dict(title="Position")
+        coloraxis_colorbar=dict(title="Position"),
+        paper_bgcolor='#E0FEFF',
+        plot_bgcolor='#E0FEFF',
+        titlefont = dict(color='black'),
+        title = {
+            'y':0.95,
+            'x':0.5,
+            'xanchor': 'center',
+            'yanchor': 'top'
+        }
+
     )
     # Show the chart
     st.plotly_chart(fig, use_container_width=False)
@@ -821,7 +974,7 @@ def plot_player_vs_avg_actual_points(df, full_name):
     fig, ax = plt.subplots(figsize=(12, 8))
     # Loop through the gameweeks and conditionally color the bars based on 'was_home'
     for i, row in player_data.iterrows():
-        bar_color = '#1E90FF' if row['was_home'] == 1 else '#FF6347'  # Blue for home, Red/Pink for away
+        bar_color = '#EF553B' if row['was_home'] == 1 else '#636EFA'  # Blue for home, Red/Pink for away
         ax.bar(row['GW'], row['total_points'], width=0.4, color=bar_color, label=f'{full_name} - Actual Points' if i == 0 else "")
     # Line plot for the average actual points for the position
     ax.plot(avg_actual_points['GW'], avg_actual_points['total_points'], label=f'Average {player_position} - Actual Points', color='#BA55D3', linestyle='--', linewidth=2)

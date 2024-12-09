@@ -16,27 +16,27 @@ FORMATION_MAP = {
 FIELD_COORDS_HALF = {
     '3-4-3': {
         'GKP': [(40, 10)],
-        'DEF': [(20, 30), (40, 30), (60, 30)],
-        'MID': [(10, 50), (30, 50), (50, 50), (70, 50)],
-        'FWD': [(20, 70), (40, 70), (60, 70)],
+        'DEF': [(20, 25), (40, 25), (60, 25)],
+        'MID': [(10, 35), (30, 35), (50, 35), (70, 35)],
+        'FWD': [(20, 45), (40, 45), (60, 45)],
     },
     '3-5-2': {
         'GKP': [(40, 10)],
-        'DEF': [(20, 30), (40, 30), (60, 30)],
-        'MID': [(10, 50), (25, 50), (40, 50), (55, 50), (70, 50)],
-        'FWD': [(30, 70), (50, 70)],
+        'DEF': [(20, 25), (40, 25), (60, 25)],
+        'MID': [(10, 35), (25, 35), (40, 35), (55, 35), (70, 35)],
+        'FWD': [(30, 45), (50, 45)],
     },
     '4-4-2': {
         'GKP': [(40, 10)],
-        'DEF': [(10, 30), (30, 30), (50, 30), (70, 30)],
-        'MID': [(10, 50), (30, 50), (50, 50), (70, 50)],
-        'FWD': [(30, 70), (50, 70)],
+        'DEF': [(10, 25), (30, 25), (50, 25), (70, 25)],
+        'MID': [(10, 35), (30, 35), (50, 35), (70, 35)],
+        'FWD': [(30, 45), (50, 45)],
     },
     '4-3-3': {
         'GKP': [(40, 10)],
-        'DEF': [(10, 30), (30, 30), (50, 30), (70, 30)],
-        'MID': [(20, 50), (40, 50), (60, 50)],
-        'FWD': [(10, 70), (40, 70), (70, 70)],
+        'DEF': [(10, 25), (30, 25), (50, 25), (70, 25)],
+        'MID': [(20, 35), (40, 35), (60, 35)],
+        'FWD': [(20, 45), (40, 45), (60, 45)],
     },
 }
 
@@ -74,7 +74,7 @@ POSITION_FULL_NAMES = {
 
 # Color Palette
 COLOR_PALETTE = {
-    'App Title': '#f5005f',      # Pinkish Red
+    'App Title': '#d90050',      # Pinkish Red
     'Sidebar Pick': '#4ff1fe',    # Light Blue
     'Sidebar Budget': '#ebff00',  # Bright Yellow
     'Performance Analysis': '#4eff83',  # Vibrant Green
@@ -82,8 +82,25 @@ COLOR_PALETTE = {
     'Gray': '#aaaaaa'             # Gray for neutral elements
 }
 
-# Icon Mapping
-# constants.py
+# Combined Color Palette
+COMBINED_COLOR_PALETTE = [
+    # Core Application Colors (Brand-Related)
+    '#f5005f',  # Pinkish Red (App Title)
+    '#4ff1fe',  # Light Blue (Sidebar Pick)
+    '#ebff00',  # Bright Yellow (Sidebar Budget)
+    '#4eff83',  # Vibrant Green (Performance Analysis)
+    '#A020F0',  # Purple (Predicted Points)
+    '#aaaaaa',  # Gray (Neutral Elements)
+    '#04f5ff',  # Light Blue (Best Team)#
+    '#e90052',  # Red (Your Team)
+    '#d90050',  # Pinkish Red (App Title)
+
+    # Position-Based Colors
+    '#636EFA',  # Blue (GKP)
+    '#EF553B',  # Red (DEF)
+    '#00CC96',  # Green (MID)
+    '#AB63FA'   # Purple (FWD)
+]
 
 # Existing SECTION_ICONS
 SECTION_ICONS = {

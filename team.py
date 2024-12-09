@@ -24,7 +24,7 @@ def get_player_pred(name, team):
         return 0
 
 st.markdown(
-    f"<h1 style='text-align: center; color: {COLOR_PALETTE['App Title']};'>{SECTION_ICONS['App Title']} Ultimate FPL Manager<br> GW {load_gameweek_data_from_github('2024-25').GW.max() + 1}</h1>",
+    f"<h2 style='text-align: center; color: {COLOR_PALETTE['App Title']};'>{SECTION_ICONS['App Title']} Ultimate FPL Manager<br> GW {load_gameweek_data_from_github('2024-25').GW.max() + 1}</h1>",
     unsafe_allow_html=True
 )
 
@@ -41,7 +41,7 @@ if 'formation' not in st.session_state:
     st.session_state.formation = None
 
 st.sidebar.markdown(
-    f"<h2 style='color: {COLOR_PALETTE['Sidebar Pick']};'>{SECTION_ICONS['Pick Players']} Build Your Dream Team</h2>",
+    f"<h3 style='color: {COLOR_PALETTE['Sidebar Pick']};'>{SECTION_ICONS['Pick Players']} Build Your Dream Team</h3>",
     unsafe_allow_html=True
 )
 
@@ -85,7 +85,7 @@ else:
 
 col1, col2 = st.columns([2, 1])
 with col1:
-    team_to_display = st.radio("Select Team to Visualize", ['Your Team', 'Best Team'])
+    team_to_display = st.radio("Select Team to View", ['Your Team', 'Best Team'])
 
     if team_to_display == 'Your Team':
         team_to_show = selected_players
@@ -150,36 +150,31 @@ with col2:
                             unsafe_allow_html=True
                         )
     else:
-        st.write("**Please select your team or best team to view player photos.**")
+        st.write("**Please select your team or best team to view players.**")
+
+st.divider()
 
 st.markdown(
-    f"<h3 align='center' style='color: {COLOR_PALETTE['Performance Analysis']};'>{SECTION_ICONS['Performance Analysis']} Team Performance and Cost Analysis</h3>",
+    f"<h3 align='center' style='color: {COLOR_PALETTE['Performance Analysis']};'>{SECTION_ICONS['Performance Analysis']} Team & Player Performance, Cost, and Ownership Insights</h3>",
     unsafe_allow_html=True
 )
 
-total_points_vs_cost_yearly(player_data, 500)
+tab1, tab2 = st.columns(2)
+
+with tab1:
+    plot_total_points_comparison(selected_players, best_team)
+
+    st.divider()
+
+    plot_team_radar_chart(selected_players, best_team)
+
+with tab2:
+    total_points_vs_cost_yearly(player_data, 500)
+    st.divider()
+    ownership_vs_points_bubble_chart_with_dropdown(player_data, min_ownership_pct=10.0)
 
 st.divider()
 
-ownership_vs_points_bubble_chart_with_dropdown(player_data, min_ownership_pct=10.0)
-st.divider()
-
-st.markdown(
-    f"<h4 style='color: {COLOR_PALETTE['Performance Analysis']};'>{SECTION_ICONS['Performance Analysis']} Total Points Comparison</h4>",
-    unsafe_allow_html=True)
-plot_total_points_comparison(selected_players, best_team)
-
-st.divider()
-
-st.markdown(
-    f"<h4 style='color: {COLOR_PALETTE['Performance Analysis']};'>{SECTION_ICONS['Performance Analysis']} Average Team Performance Metrics Comparison</h4>",
-    unsafe_allow_html=True
-)
-plot_team_radar_chart(selected_players, best_team)
-
-st.markdown(
-    f"<h4 style='color: {COLOR_PALETTE['Performance Analysis']};'>{SECTION_ICONS['Cost Distribution']} Position-wise Cost Distribution</h4>",
-    unsafe_allow_html=True)
 plot_cost_breakdown_by_position(selected_players, best_team)
 
 user_player_names = set(p['web_name'] for p in selected_players)
@@ -190,3 +185,5 @@ if common_players:
     st.write(f"**{SECTION_ICONS['Shared Players']} Shared Players Spotlight:** {', '.join(common_players)}")
 else:
     st.write("**No common players between your team and the best team.**")
+
+st.divider()
