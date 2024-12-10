@@ -171,8 +171,6 @@ if (player0 is not None and player1 is None) or (player0 is None and player1 is 
     player_position = str(df[df.full_name==player].position.values[0])
     sim_players = get_similar_players(df, player, target_position=player_position, top_n=5)
     
-    print(sim_players)
-
     with dash.col[1]:
         sim_players_df = pd.DataFrame(sim_players)
         sim_players_df = sim_players_df.reset_index()
