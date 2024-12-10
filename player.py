@@ -68,7 +68,14 @@ def get_similar_players(df_new: pd.DataFrame, player_name:str, target_position=N
 
     same_position_players = df[df['position'] == target_position]['full_name']
     distances = distance_df_umap.loc[player_name, same_position_players]
-    similar_players = distances.sort_values()[1:top_n+1]  # Exclude self (distance = 0)
+
+    # Normalize similarity scores (invert distances and normalize)
+    similarity_scores = 1 / (1 + distances)  # Invert distances to get similarity
+    normalized_scores = (similarity_scores - similarity_scores.min()) / (similarity_scores.max() - similarity_scores.min())
+
+    # Get top N most similar players (excluding the player itself)
+    similar_players = normalized_scores.sort_values(ascending=False)[1:top_n + 1]  # Exclude self (similarity = 1)
+
     return similar_players
 
 ############################
@@ -164,6 +171,8 @@ if (player0 is not None and player1 is None) or (player0 is None and player1 is 
     player_position = str(df[df.full_name==player].position.values[0])
     sim_players = get_similar_players(df, player, target_position=player_position, top_n=5)
     
+    print(sim_players)
+
     with dash.col[1]:
         sim_players_df = pd.DataFrame(sim_players)
         sim_players_df = sim_players_df.reset_index()

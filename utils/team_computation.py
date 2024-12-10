@@ -132,5 +132,5 @@ def get_similar_players(df: pd.DataFrame, player_name:str, top_n: int = 5):
 
     # Get top N most similar players (excluding the player itself)
     similar_players = normalized_scores.sort_values(ascending=False)[1:top_n + 1]  # Exclude self (similarity = 1)
-    
+
     return similar_players
