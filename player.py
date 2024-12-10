@@ -87,11 +87,6 @@ df_gh = load_gameweek_data_from_github(year)
 # players = df.name.values.tolist()
 players = sorted(df.full_name.values.tolist())
 
-# df_teams = df.groupby('team').sum()['total_points'].reset_index().sort_values('total_points', ascending=False)
-# pie_data=[]
-# for i in range(12):
-    # pie_data.append({"id": df.iloc[i]['name'], "label": df.iloc[i]['name'], "value": df.iloc[i]['now_cost']/10.})
-
 BUDGET = 100
 ############################################
 
@@ -106,7 +101,6 @@ class Dashboard(object):
     def create_field(self, col_num):
         
         with self.col[col_num]:
-            # st.title("Team Field Positioning")
             img = mpimg.imread("../data/dark_field.png")  # Assume you have an image of the field in the same directory
             fig, ax = plt.subplots(figsize=(3,3), frameon=False)
             ax.imshow(img)
@@ -114,13 +108,6 @@ class Dashboard(object):
             ax.set_xticks([])
             ax.set_yticks([])
             st.pyplot(fig, use_container_width=False)
-
-            # fig, ax = plt.subplots(figsize=(3,3))
-            # matplotsoccer.field("green",figsize=8, show=False)
-            # plt.scatter(x,y)
-            # plt.axis("on")
-            # plt.show()
-            # st.pyplot(fig, use_container_width=False)
 
     def create_topteams(self, col_num):
 
@@ -170,7 +157,7 @@ if (player0 is not None and player1 is None) or (player0 is None and player1 is 
     player = copy(player0 if player0 is not None else player1)
     player_position = str(df[df.full_name==player].position.values[0])
     sim_players = get_similar_players(df, player, target_position=player_position, top_n=5)
-    
+
     with dash.col[1]:
         sim_players_df = pd.DataFrame(sim_players)
         sim_players_df = sim_players_df.reset_index()
@@ -192,24 +179,6 @@ if player0 is not None and player1 is not None:
     metrics = ['now_cost', 'total_points','goals_conceded','creativity','form']
 
     metrics_formatted = format_keys(metrics)
-
-    # radar_data = [{"metric": metrics_formatted[0]},
-    #               {"metric": metrics_formatted[1]},
-    #               {"metric": metrics_formatted[2]},
-    #               {"metric": metrics_formatted[3]},
-    #               {"metric": metrics_formatted[4]}
-    #             ]
-    # keys_ = [m['metric'] for m in radar_data]
-    # for p in selected_players:
-    #     current_cost = df[df.full_name==p].now_cost / 10.
-    #     cost_perc = 100. * (current_cost.iloc[0] / BUDGET)
-    #     pie_data.append({"id": p, "label": p, "value": f'{cost_perc:0.2f}'})
-
-    #     radar_data[0][p] = float(df[df.full_name==p][metrics[0]].iloc[0]) if df[df.full_name==p][metrics[0]].iloc[0] != '' else 0
-    #     radar_data[2][p] = float(df[df.full_name==p][metrics[1]].iloc[0]) if df[df.full_name==p][metrics[1]].iloc[0] != '' else 0
-    #     radar_data[1][p] = float(df[df.full_name==p][metrics[2]].iloc[0]) if df[df.full_name==p][metrics[2]].iloc[0] != '' else 0
-    #     radar_data[3][p] = float(df[df.full_name==p][metrics[3]].iloc[0]) if df[df.full_name==p][metrics[3]].iloc[0] != '' else 0
-    #     radar_data[4][p] = float(df[df.full_name==p][metrics[4]].iloc[0]) if df[df.full_name==p][metrics[4]].iloc[0] != '' else 0
 
     with dash.col[0]:
         st.markdown(f'#### {st.session_state.selected_player0}', unsafe_allow_html=True)
