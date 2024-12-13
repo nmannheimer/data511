@@ -6,6 +6,49 @@ import streamlit as st
 from utils.constants import COMMON_METRICS
 import unicodedata
 
+
+READ_COLS = ['name',
+ 'position',
+ 'team',
+ 'xP',
+ 'assists',
+ 'bonus',
+ 'bps',
+ 'clean_sheets',
+ 'creativity',
+ 'element',
+ 'expected_assists',
+ 'expected_goal_involvements',
+ 'expected_goals',
+ 'expected_goals_conceded',
+ 'fixture',
+ 'goals_conceded',
+ 'goals_scored',
+ 'ict_index',
+ 'influence',
+ 'kickoff_time',
+ 'minutes',
+ 'opponent_team',
+ 'own_goals',
+ 'penalties_missed',
+ 'penalties_saved',
+ 'red_cards',
+ 'round',
+ 'saves',
+ 'selected',
+ 'starts',
+ 'team_a_score',
+ 'team_h_score',
+ 'threat',
+ 'total_points',
+ 'transfers_balance',
+ 'transfers_in',
+ 'transfers_out',
+ 'value',
+ 'was_home',
+ 'yellow_cards',
+ 'GW']
+
 @st.cache_data
 def load_player_data_from_api():
     """Fetches player data from the FPL API and returns a DataFrame with selected columns."""
@@ -96,7 +139,7 @@ def load_gameweek_data_from_github(year: str):
     
     try:
         url_gw = f"https://raw.githubusercontent.com/vaastav/Fantasy-Premier-League/master/data/{year}/gws/merged_gw.csv"
-        df = pd.read_csv(url_gw)
+        df = pd.read_csv(url_gw, usecols=READ_COLS)
     except Exception as e:
         st.error(f"There was an error: {e} while retrieving data")
         return pd.DataFrame()
