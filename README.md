@@ -1,5 +1,9 @@
 # DATA511: FPL Dashboard
 
+## Deployed Dashboard
+
+Follow this link to try it out! https://fpl511.streamlit.app/
+
 ## Execution
 
 Run the following within your conda env to execute the main dash:
